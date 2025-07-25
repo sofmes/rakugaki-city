@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { renderer } from "./renderer";
+import UITest from "./ui-test";
 
 const app = new Hono<{ Bindings: CloudflareBindings }>();
 
@@ -9,6 +10,10 @@ app.get("/", (c) => {
 	const roomId = 0;
 
 	return c.redirect(`/${roomId}`);
+});
+
+app.get("/ui-test", (c) => {
+	return c.render(<UITest />);
 });
 
 app.get("/:roomId", (c) => {
