@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import Canvas from "./canvas";
 import { renderer } from "./renderer";
 import UITest from "./ui-test";
 
@@ -19,7 +20,13 @@ app.get("/ui-test", (c) => {
 app.get("/:roomId", (c) => {
 	const roomId = c.req.param("roomId");
 
-	return c.render(<h1>Room: {roomId}</h1>);
+	return c.render(
+		<div>
+			<h1>Room: {roomId}</h1>
+
+			<Canvas />
+		</div>,
+	);
 });
 
 export default app;
