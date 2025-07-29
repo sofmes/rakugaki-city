@@ -17,23 +17,31 @@ h1 {
 #firstbox {
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  width:fit-content
+  justify-content: space-around;
+  width:fit-content;
+  padding: 15% 0;
 }
 
 #secondbox {
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: space-evenly;
   padding: 0px;
   width: fit-content;
   margin-left: auto; 
   margin-right: 0;
 }
 
+img.svg-icon {
+    width: 50%;
+    margin: auto;
+}
+
+
+
 .basebtn {
   padding: 5px;
-  width: 70px;
+  width: 90px;
   background-color: transparent;
   display: flex;
   flex-direction: column;
@@ -50,7 +58,6 @@ div{
   border: solid;
 }
 .btn-selected {
-  width: 70px;
   display: inline-block;
   border: solid;
   background-color: #f0f0f0;

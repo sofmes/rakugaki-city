@@ -2,7 +2,7 @@ export default function UITest() {
 	return <div id="mainbox">
     <div id="firstbox">
     <button type="button" className="basebtn">
-      <img src="src/icons/pen.svg" alt="ペンアイコン" />
+      <img src="src/icons/pen.svg" alt="ペンアイコン" className="svg-icon" />
       ペン
       </button>
     <button type="button" className="basebtn">
@@ -14,8 +14,8 @@ export default function UITest() {
       投げ縄選択
       </button>
     
-    <button type="button" className="btn-selected">
-      <img src="src/icons/ban.svg" alt="選択用アイコン" className="svg-icon" />
+    <button type="button" className="basebtn">
+      <img src="src/icons/ban.svg" alt="選択用アイコン" className="svg-icon btn-selected " />
     </button>
   </div>
   <div id="secondbox">
