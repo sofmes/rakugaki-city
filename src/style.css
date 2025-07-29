@@ -1,3 +1,73 @@
 h1 {
   font-family: Arial, Helvetica, sans-serif;
+  
 }
+
+#mainbox {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  height: 100%;
+  position: fixed;
+  top: 0;
+  left: 0;
+}
+
+
+#firstbox {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width:fit-content
+}
+
+#secondbox {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0px;
+  width: fit-content;
+  margin-left: auto; 
+  margin-right: 0;
+}
+
+.basebtn {
+  padding: 5px;
+  width: 70px;
+  background-color: transparent;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  border: none;
+  cursor: pointer;
+  outline: none;
+  appearance: none;
+  gap: 5px;
+  font-size: 10px;
+}
+
+div{
+  border: solid;
+}
+.btn-selected {
+  width: 70px;
+  display: inline-block;
+  border: solid;
+  background-color: #f0f0f0;
+  border-radius: 5px;
+  background-color: transparent;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+
+.rightbtn {
+  width: 6%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background-color: transparent;
+  float: right;
+}
+
