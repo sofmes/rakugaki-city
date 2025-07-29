@@ -1,6 +1,26 @@
 h1 {
   font-family: Arial, Helvetica, sans-serif;
-  
+}
+
+body {
+  padding: 0;
+  margin: 0;
+}
+
+#header {
+  position: absolute;
+  top: 5px;
+  left: 10px;
+  font-size: 30px;
+  font-weight: bold;
+}
+
+#thirdbox {
+    align-self: center;
+    width: 700px;
+    height: 600px;
+    border: solid;
+    margin: auto;
 }
 
 #mainbox {
@@ -13,22 +33,22 @@ h1 {
   left: 0;
 }
 
-
 #firstbox {
   display: flex;
   flex-direction: column;
-  justify-content: space-around;
-  width:fit-content;
-  padding: 15% 0;
+  justify-content: center;
+  align-items: center;
+  width: 15%;
+  gap: 20px;
 }
 
 #secondbox {
   display: flex;
   flex-direction: column;
   justify-content: space-evenly;
+  align-items: center;
   padding: 0px;
-  width: fit-content;
-  margin-left: auto; 
+  width: 15%;
   margin-right: 0;
 }
 
@@ -36,8 +56,6 @@ img.svg-icon {
     width: 50%;
     margin: auto;
 }
-
-
 
 .basebtn {
   padding: 5px;
@@ -51,12 +69,12 @@ img.svg-icon {
   outline: none;
   appearance: none;
   gap: 5px;
-  font-size: 10px;
 }
 
-div{
-  border: solid;
+div {
+  /* border: solid; */
 }
+
 .btn-selected {
   display: inline-block;
   border: solid;
@@ -66,8 +84,8 @@ div{
   display: flex;
   flex-direction: column;
   justify-content: center;
+  padding: 3px;
 }
-
 
 .rightbtn {
   width: 6%;
@@ -77,4 +95,3 @@ div{
   background-color: transparent;
   float: right;
 }
-
