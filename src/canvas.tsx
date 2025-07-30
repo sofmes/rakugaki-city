@@ -1,21 +1,43 @@
 import { useEffect, useRef } from "hono/jsx";
+import createPanZoom from "panzoom";
 
 export default function Canvas() {
-	const canvasRef = useRef<HTMLCanvasElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
-	useEffect(() => {
-		if (!canvasRef.current)
-			throw new Error("キャンバスの取得ができませんでした。");
+  useEffect(() => {
+    if (!canvasRef.current)
+      throw new Error("キャンバスの取得ができませんでした。");
 
-		const ctx = canvasRef.current.getContext("2d");
-		if (!ctx) throw new Error("キャンバスのContextの取得に失敗しました。");
+    const ctx = canvasRef.current.getContext("2d");
+    if (!ctx) throw new Error("キャンバスのContextの取得に失敗しました。");
 
-		new CanvasController(ctx);
-	});
+    // マウスイベントを設定。
+    const cleanUpZoom = setupZoomEvent(canvasRef.current);
 
-	return <canvas ref={canvasRef} style="width: 40vw; height: 40vw;" />;
+    new CanvasController(ctx);
+
+    return () => {
+      cleanUpZoom();
+    };
+  });
+
+  return <canvas ref={canvasRef} id="canvas" />;
+}
+
+function setupZoomEvent(canvas: HTMLCanvasElement) {
+  const instance = createPanZoom(canvas);
+
+  const rect = canvas.getBoundingClientRect();
+  instance.moveTo(
+    innerWidth / 2 - rect.width / 2,
+    innerHeight / 2 - rect.height / 2,
+  );
+
+  return () => {
+    instance.dispose();
+  };
 }
 
 class CanvasController {
-	constructor(private readonly ctx: CanvasRenderingContext2D) {}
+  constructor(private readonly ctx: CanvasRenderingContext2D) {}
 }
