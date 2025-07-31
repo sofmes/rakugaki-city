@@ -12,6 +12,13 @@ export class CanvasManager {
     this.currentTool = new Pen(this, ctx);
   }
 
+  test() {
+    console.log(this.ctx);
+    this.ctx.beginPath();
+    this.ctx.arc(30, 30, 10, 0, 2 * Math.PI);
+    this.ctx.fill();
+  }
+
   pushSnapshot() {
     const { width, height } = this.state.getSize();
     this.stack.push(this.ctx.getImageData(0, 0, width, height));
