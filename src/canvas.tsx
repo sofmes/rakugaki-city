@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "hono/jsx";
 import createPanZoom from "panzoom";
+import { CanvasManager } from "./lib/canvas";
 
 export default function Canvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -14,7 +15,13 @@ export default function Canvas() {
     // マウスイベントを設定。
     const cleanUpZoom = setupZoomEvent(canvasRef.current);
 
-    new CanvasController(ctx);
+    const getSize = () => {
+      const rect = canvasRef.current?.getBoundingClientRect();
+      if (!rect) throw new Error("キャンバスのサイズの取得に失敗しました。")
+      return rect;
+    }
+
+    new CanvasManager(ctx, {getSize});
 
     return () => {
       cleanUpZoom();
@@ -36,8 +43,4 @@ function setupZoomEvent(canvas: HTMLCanvasElement) {
   return () => {
     instance.dispose();
   };
-}
-
-class CanvasController {
-  constructor(private readonly ctx: CanvasRenderingContext2D) {}
 }
