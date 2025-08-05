@@ -1,6 +1,9 @@
 export default function UITest() {
 	return <>
+    <ICON />
     <Header />
+
+
 
     <div id="mainbox">
       <FirstBox />
@@ -66,4 +69,9 @@ function SecondBox() {
       元に戻す
     </button>
   </div>;
+}
+
+
+function ICON() {
+  return <img id="logo" src="public/sofume_logo.png" alt="落書きシティのロゴ" />;
 }
