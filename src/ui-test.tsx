@@ -5,11 +5,12 @@ export default function UITest() {
   return (
     <>
       <Header />
+
+      <ICON />
       <Canvas />
 
       <div id="mainbox">
         <FirstBox />
-
         <SecondBox />
       </div>
     </>
@@ -89,6 +90,10 @@ function SecondBox() {
       </button>
     </div>
   );
+}
+
+function ICON() {
+  return <img id="logo" src="public/sofume_logo.png" alt="落書きシティのロゴ" />;
 }
 
 const element = document.getElementById("client-components");
