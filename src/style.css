@@ -47,12 +47,50 @@ body {
 }
 
 #firstbox {
+      display: flex;
+    flex-direction: column;
+    justify-items: left;
+    /* align-items: center; */
+    width: 15%;
+    gap: 20px;
+    justify-content: center;
+    padding-left: 50px;
+}
+
+#toolbox {
+  display: flex;
+  flex-direction: row;
+}
+
+.color-btn {
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  border: none;
+}
+
+#colorbox {
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  width: 15%;
-  gap: 20px;
+  gap: 5px;
+}
+
+.bg-black {
+  background-color: black;
+}
+
+.bg-red {
+  background-color: red;
+}
+
+.bg-yellow {
+  background-color: yellow;
+}
+
+.bg-blue {
+  background-color: blue;
 }
 
 #secondbox {
@@ -68,6 +106,7 @@ body {
 img.svg-icon {
   width: 50%;
   margin: auto;
+
 }
 
 .basebtn {
@@ -91,6 +130,7 @@ img.svg-icon {
   display: flex;
   flex-direction: column;
   justify-content: center;
+  border-width: 3px;
   padding: 3px;
 }
 

@@ -1,16 +1,16 @@
-import { render } from "hono/jsx/dom";
+import { render, useEffect, useState } from "hono/jsx/dom";
 import Canvas from "./canvas";
 
 export default function UITest() {
   return (
     <>
       <Header />
-
-      <ICON />
+      <Logo />
       <Canvas />
 
       <div id="mainbox">
         <FirstBox />
+
         <SecondBox />
       </div>
     </>
@@ -21,9 +21,9 @@ function Header() {
   return <header id="header">落書きシティ</header>;
 }
 
-function ToolButton(props: { src: string; name: string; selected: boolean }) {
+function ToolButton(props: { src: string; name: string; selected: boolean; onClick: () => void }) {
   return (
-    <button type="button" className="basebtn">
+    <button type="button" className="basebtn" onClick={props.onClick}>
       <img
         src={props.src}
         alt={`${props.name}アイコン`}
@@ -34,37 +34,40 @@ function ToolButton(props: { src: string; name: string; selected: boolean }) {
   );
 }
 
-// - ロゴの配置
-// - 上のToolButtonを少し勉強する（任意）
-
 function FirstBox() {
+  const [activeButton, setActiveButton] = useState<number | null>(null);
+
   return (
     <div id="firstbox">
-      <button type="button" className="basebtn">
-        <img src="src/icons/pen.svg" alt="ペンアイコン" className="svg-icon" />
-        ペン
-      </button>
-
-      <button type="button" className="basebtn">
-        <img
-          src="src/icons/eraser.svg"
-          alt="消しゴムアイコン"
-          className="svg-icon"
+      <div id="toolbox">
+        <ToolButton
+          src="src/icons/pen.svg"
+          name="ペン"
+          selected={activeButton === 1}
+          onClick={() => setActiveButton(1)}
         />
-        消しゴム
-      </button>
-      <button type="button" className="basebtn">
-        <img
-          src="src/icons/lasso.svg"
-          alt="投げ縄選択アイコン"
-          className="svg-icon btn-selected"
-        />
-        投げ縄選択
-      </button>
 
-      {/* <button type="button" className="basebtn">
-      <img src="src/icons/ban.svg" alt="選択用アイコン" className="svg-icon btn-selected " />
-    </button> */}
+        <div id="colorbox">
+          <button type="button" className="color-btn bg-black"></button>
+          <button type="button" className="color-btn bg-red"></button>
+          <button type="button" className="color-btn bg-yellow"></button>
+          <button type="button" className="color-btn bg-blue"></button>
+        </div>
+      </div>
+
+      <ToolButton
+        src="src/icons/eraser.svg"
+        name="消しゴム"
+        selected={activeButton === 2}
+        onClick={() => setActiveButton(2)}
+      />
+
+      <ToolButton
+        src="src/icons/lasso.svg"
+        name="投げ縄"
+        selected={activeButton === 3}
+        onClick={() => setActiveButton(3)}
+      />
     </div>
   );
 }
@@ -92,9 +95,25 @@ function SecondBox() {
   );
 }
 
-function ICON() {
+function Logo() {
   return <img id="logo" src="public/sofume_logo.png" alt="落書きシティのロゴ" />;
 }
 
 const element = document.getElementById("client-components");
 render(<UITest />, element as HTMLElement);
+
+
+
+// function COUNTER() {
+//   const [count, Setcount] = useState(0)
+
+//   return (
+//     <button onClick={() => Setcount(count + 1)}>カウント: {count}</button>
+//   );
+// }
+
+//　ボタンの選択の時にボーダーを設定 Reactで 次回まで
+
+
+
+
