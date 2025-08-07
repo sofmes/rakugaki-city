@@ -2,7 +2,9 @@ import { useEffect, useRef } from "hono/jsx";
 import createPanZoom from "panzoom";
 import { CanvasManager } from "./lib/canvas";
 
-export default function Canvas() {
+export default function Canvas(props: {
+  setCanvasManager: (manager: CanvasManager) => void;
+}) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -19,9 +21,11 @@ export default function Canvas() {
     };
 
     const canvasManager = new CanvasManager(ctx, { getSize });
+    props.setCanvasManager(canvasManager);
 
     // マウスイベントを設定。
     const [panzoom, cleanUpPanZoom] = setupPanZoom(canvasRef.current);
+    console.log(2);
 
     const getScale = () => panzoom.getTransform().scale;
     const cleanUpDraw = setupDrawEvent(canvasRef.current, canvasManager, {
