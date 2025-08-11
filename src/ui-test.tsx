@@ -1,4 +1,4 @@
-import { createContext, memo, useContext, useEffect, useState } from "hono/jsx";
+import { createContext, memo, useContext, useEffect, useState, type PropsWithChildren } from "hono/jsx";
 import { render } from "hono/jsx/dom";
 import Canvas from "./canvas";
 import type { CanvasManager } from "./lib/canvas";
@@ -32,20 +32,23 @@ function Header() {
   return <header id="header">落書きシティ</header>;
 }
 
-function ToolButton(props: {
+function ToolButton(props: PropsWithChildren<{
   src: string;
   name: string;
   selected: boolean;
   onClick: () => void;
-}) {
+  className?: string;
+}>) {
   return (
-    <button type="button" className="basebtn" onClick={props.onClick}>
+    <button type="button" className={`basebtn ${props.className || ""}`} onClick={props.onClick}>
       <img
         src={props.src}
         alt={`${props.name}アイコン`}
         className={`svg-icon ${props.selected ? "btn-selected" : ""}`}
       />
       {props.name}
+
+      {props.children}
     </button>
   );
 }
@@ -101,16 +104,16 @@ function FirstBox() {
 
   return (
     <div id="firstbox">
-      <div id="toolbox">
-        <ToolButton
-          src="src/icons/pen.svg"
-          name="ペン"
-          selected={activeButton === 1}
-          onClick={() => setActiveButton(1)}
-        />
-
+      <ToolButton
+        src="src/icons/pen.svg"
+        name="ペン"
+        selected={activeButton === 1}
+        onClick={() => setActiveButton(1)}
+        className="pen-btn"
+      >
         <ColorSelect />
-      </div>
+      </ToolButton>
+
 
       <ToolButton
         src="src/icons/eraser.svg"

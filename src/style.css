@@ -53,17 +53,21 @@ body {
 #firstbox {
   display: flex;
   flex-direction: column;
-  justify-items: left;
-  /* align-items: center; */
+  justify-items: center;
+  align-items: center; 
   width: 15%;
   gap: 20px;
   justify-content: center;
-  padding-left: 30px;
 }
 
 #toolbox {
   display: flex;
   flex-direction: row;
+}
+
+.pen-btn {
+  /* 色選択のボックスの場所を相対指定するためにrelativeを設定する。 */
+  position: relative;
 }
 
 .color-btn {
@@ -79,6 +83,12 @@ body {
   flex-direction: column;
   justify-content: center;
   align-items: center;
+
+  /* 位置 */
+  position: absolute;
+  top: 50%;
+  left: 100%;
+  translate: 0 -50%;
 }
 
 .bg-black {
