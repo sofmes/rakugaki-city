@@ -1,27 +1,43 @@
-import { render, useEffect, useState } from "hono/jsx/dom";
+import { createContext, memo, useContext, useEffect, useState } from "hono/jsx";
+import { render } from "hono/jsx/dom";
 import Canvas from "./canvas";
+import type { CanvasManager } from "./lib/canvas";
+import type { ToolKind } from "./lib/canvas-tool";
+
+const CanvasWithMemo = memo(Canvas);
 
 export default function UITest() {
+  const [manager, setManager] = useState<CanvasManager | null>(null);
+
   return (
     <>
       <Header />
       <Logo />
-      <Canvas />
+      <CanvasWithMemo setCanvasManager={setManager} />
 
-      <div id="mainbox">
-        <FirstBox />
+      <canvasContext.Provider value={manager}>
+        <div id="mainbox">
+          <FirstBox />
 
-        <SecondBox />
-      </div>
+          <SecondBox />
+        </div>
+      </canvasContext.Provider>
     </>
   );
 }
+
+const canvasContext = createContext<CanvasManager | null>(null);
 
 function Header() {
   return <header id="header">落書きシティ</header>;
 }
 
-function ToolButton(props: { src: string; name: string; selected: boolean; onClick: () => void }) {
+function ToolButton(props: {
+  src: string;
+  name: string;
+  selected: boolean;
+  onClick: () => void;
+}) {
   return (
     <button type="button" className="basebtn" onClick={props.onClick}>
       <img
@@ -63,6 +79,25 @@ function ColorSelect() {
 
 function FirstBox() {
   const [activeButton, setActiveButton] = useState<number | null>(null);
+  const manager = useContext(canvasContext);
+
+  useEffect(() => {
+    if (!manager) return;
+
+    let name: ToolKind = "pen";
+
+    switch (activeButton) {
+      case 1:
+        name = "pen";
+        break;
+      case 2:
+        name = "eraser";
+        break;
+    }
+    console.log(1);
+
+    manager.setTool(name);
+  }, [activeButton]);
 
   return (
     <div id="firstbox">
@@ -118,13 +153,13 @@ function SecondBox() {
 }
 
 function Logo() {
-  return <img id="logo" src="public/sofume_logo.png" alt="落書きシティのロゴ" />;
+  return (
+    <img id="logo" src="public/sofume_logo.png" alt="落書きシティのロゴ" />
+  );
 }
 
 const element = document.getElementById("client-components");
 render(<UITest />, element as HTMLElement);
-
-
 
 // function COUNTER() {
 //   const [count, Setcount] = useState(0)
@@ -135,7 +170,3 @@ render(<UITest />, element as HTMLElement);
 // }
 
 //　ボタンの選択の時にボーダーを設定 Reactで 次回まで
-
-
-
-
