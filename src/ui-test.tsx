@@ -34,6 +34,33 @@ function ToolButton(props: { src: string; name: string; selected: boolean; onCli
   );
 }
 
+
+function ColorButton(props: {  name: string; selected: boolean; onClick: () => void }) {
+  return (
+    <button type="button" className="basebtn" onClick={props.onClick}>
+      <button
+        type="button"
+        className={`color-btn bg-${props.name} ${props.selected ? "color-btn-selected" : ""}`}
+      />
+    </button>
+  );
+}
+
+
+//次回 色のボタンにアウトライン 切り替え
+function ColorSelect() {
+  const [color, setColor] = useState<string>("black");
+
+  return (
+    <div id="colorbox">
+      <ColorButton name="black" selected={color === "black"} onClick={() => setColor("black")} />
+      <ColorButton name="red" selected={color === "red"} onClick={() => setColor("red")} />
+      <ColorButton name="yellow" selected={color === "yellow"} onClick={() => setColor("yellow")} />
+      <ColorButton name="blue" selected={color === "blue"} onClick={() => setColor("blue")} />
+    </div>
+  );
+}
+
 function FirstBox() {
   const [activeButton, setActiveButton] = useState<number | null>(null);
 
@@ -47,12 +74,7 @@ function FirstBox() {
           onClick={() => setActiveButton(1)}
         />
 
-        <div id="colorbox">
-          <button type="button" className="color-btn bg-black"></button>
-          <button type="button" className="color-btn bg-red"></button>
-          <button type="button" className="color-btn bg-yellow"></button>
-          <button type="button" className="color-btn bg-blue"></button>
-        </div>
+        <ColorSelect />
       </div>
 
       <ToolButton
