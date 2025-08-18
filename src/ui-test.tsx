@@ -19,7 +19,7 @@ export default function UITest() {
     <>
       <Header />
       <Logo />
-      <CanvasWithMemo setCom={setCom} defaultColor="black" />
+      <CanvasWithMemo setCom={setCom} defaultColor="blue" />
 
       <comContext.Provider value={com}>
         <div id="mainbox">
@@ -82,9 +82,14 @@ function ColorButton(props: {
 
 //次回 色のボタンにアウトライン 切り替え
 function ColorSelect() {
-  const [color, setColor] = useState<string>("black");
+  const [color, setColor] = useState<string>("blue");
   const com = useContext(comContext);
-
+  // useEffect使えば、colorの値が変更されるたびに、なんらかの処理ができる。
+  // → ってことは、ここで、colorが変わるたびに、CanvasManagerのpenのcolorを変更する処理をすればいい。
+  //
+  // 1. managerをFirstBoxにあるuseContext(canvasContext)で取得。
+  // 2. com.getTools() → penとeraserを取得。
+  // 3. useEffectを使って、colorが変更されるたびに、penとeraserのpenからcolorを変更。コード例: pen.color = "red"
   useEffect(() => {
     if (!com) return;
 

@@ -54,7 +54,7 @@ body {
   display: flex;
   flex-direction: column;
   justify-items: center;
-  align-items: center; 
+  align-items: center;
   width: 15%;
   gap: 20px;
   justify-content: center;
@@ -178,3 +178,10 @@ img.svg-icon {
   /* わかりやすくするため、ボックスを可視化 */
   border: solid;
 }
+
+
+    @media (max-width: 767px) {
+      /* スマートフォン向けのスタイル */
+    }
+    
+/*スマホ向けのを作ってくる*/
