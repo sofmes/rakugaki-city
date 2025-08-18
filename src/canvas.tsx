@@ -120,7 +120,7 @@ function setupDrawEvent(
 
     const pos = convertPosition(event.clientX, event.clientY);
     if (pos) {
-      canvasManager.currentTool.down();
+      canvasManager.getCurrentTool().down();
     }
   };
 
@@ -129,7 +129,7 @@ function setupDrawEvent(
 
     const pos = convertPosition(event.clientX, event.clientY);
     if (pos) {
-      canvasManager.currentTool.move(pos.x, pos.y);
+      canvasManager.getCurrentTool().move(pos.x, pos.y);
     }
   };
 
@@ -138,7 +138,7 @@ function setupDrawEvent(
 
     const pos = convertPosition(event.clientX, event.clientY);
     if (pos) {
-      canvasManager.currentTool.up();
+      canvasManager.getCurrentTool().up();
     }
   };
 

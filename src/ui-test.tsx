@@ -2,7 +2,7 @@ import { createContext, memo, useContext, useEffect, useState, type PropsWithChi
 import { render } from "hono/jsx/dom";
 import Canvas from "./canvas";
 import type { CanvasManager } from "./lib/canvas";
-import type { ToolKind } from "./lib/canvas-tool";
+import type { ColorKind, ToolKind } from "./lib/canvas-tool";
 
 const CanvasWithMemo = memo(Canvas);
 
@@ -68,7 +68,19 @@ function ColorButton(props: {  name: string; selected: boolean; onClick: () => v
 
 //次回 色のボタンにアウトライン 切り替え
 function ColorSelect() {
-  const [color, setColor] = useState<string>("black");
+  const [color, setColor] = useState<string>("blue");
+  const manager = useContext(canvasContext);
+  // useEffect使えば、colorの値が変更されるたびに、なんらかの処理ができる。
+  // → ってことは、ここで、colorが変わるたびに、CanvasManagerのpenのcolorを変更する処理をすればいい。
+  //
+  // 1. managerをFirstBoxにあるuseContext(canvasContext)で取得。
+  // 2. manager.getTools() → penとeraserを取得。
+  // 3. useEffectを使って、colorが変更されるたびに、penとeraserのpenからcolorを変更。コード例: pen.color = "red"
+  useEffect(() => {
+    if (!manager) return;
+
+    manager.getTools().pen.color = color;
+  }, [color]);
 
   return (
     <div id="colorbox">
@@ -97,7 +109,6 @@ function FirstBox() {
         name = "eraser";
         break;
     }
-    console.log(1);
 
     manager.setTool(name);
   }, [activeButton]);
@@ -133,9 +144,14 @@ function FirstBox() {
 }
 
 function SecondBox() {
+  const manager = useContext(canvasContext);
+  const onClickReset = () => {
+    if (!manager) return;
+    manager.clear();
+  };
   return (
     <div id="secondbox">
-      <button type="button" className="basebtn">
+      <button type="button" className="basebtn" onClick={onClickReset}>
         <img
           src="src/icons/trash-2.svg"
           alt="リセットアイコン"

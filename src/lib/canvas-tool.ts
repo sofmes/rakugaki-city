@@ -2,6 +2,8 @@ import type { CanvasManager } from "./canvas";
 
 export type ToolKind = "pen" | "eraser" | "lasso";
 
+export type ColorKind = "red" | "blue" | "green" | "yellow" | "black";
+
 export abstract class Tool {
   abstract down(): void;
   abstract isDowned(): boolean;

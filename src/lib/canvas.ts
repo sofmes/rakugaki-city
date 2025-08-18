@@ -1,9 +1,14 @@
-import { Eraser, Pen, type Tool, type ToolKind } from "./canvas-tool";
+import { ColorKind, Eraser, Pen, type Tool, type ToolKind } from "./canvas-tool";
+
+interface Tools {
+  pen: Pen;
+  eraser: Eraser;
+}
 
 export class CanvasManager {
   private readonly stack: ImageData[];
-  public currentTool: Tool;
-
+  private currentTool: Tool;
+  private tools: Tools;
   constructor(
     private readonly ctx: CanvasRenderingContext2D,
     private readonly state: {
@@ -11,14 +16,20 @@ export class CanvasManager {
     },
   ) {
     this.stack = [];
-    this.currentTool = new Pen(this, ctx);
+
+    this.tools = {
+      pen: new Pen(this, ctx),
+      eraser: new Eraser(this, ctx)
+    };
+    this.currentTool = this.tools.pen;
   }
 
-  test() {
-    console.log(this.ctx);
-    this.ctx.beginPath();
-    this.ctx.arc(30, 30, 10, 0, 2 * Math.PI);
-    this.ctx.fill();
+  getTools(): Tools {
+    return this.tools;
+  }
+  
+  getCurrentTool(): Tool {
+    return this.currentTool;
   }
 
   currentToolName(): ToolKind {
@@ -31,16 +42,19 @@ export class CanvasManager {
     }
   }
 
+ 
+
   setTool(name: ToolKind) {
     switch (name) {
       case "pen":
-        this.currentTool = new Pen(this, this.ctx);
+        this.currentTool = this.tools.pen;
         break;
       case "eraser":
-        this.currentTool = new Eraser(this, this.ctx);
+        this.currentTool = this.tools.eraser;
         break;
     }
   }
+
 
   pushSnapshot() {
     const { width, height } = this.state.getSize();
