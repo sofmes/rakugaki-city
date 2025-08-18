@@ -1,63 +1,126 @@
-import { Eraser, Pen, type Tool, type ToolKind } from "./canvas-tool";
+import type { Coord } from "./math";
 
-export class CanvasManager {
-  private readonly stack: ImageData[];
-  public currentTool: Tool;
-
+class Path {
   constructor(
-    private readonly ctx: CanvasRenderingContext2D,
-    private readonly state: {
-      getSize: () => { width: number; height: number };
-    },
-  ) {
-    this.stack = [];
-    this.currentTool = new Pen(this, ctx);
-  }
+    public readonly ctx: CanvasRenderingContext2D,
+    public readonly points: Coord[],
+    public readonly userId: string,
+    public readonly color: string,
+    public readonly size: number,
+  ) {}
 
-  test() {
-    console.log(this.ctx);
+  private paintCircle(x: number, y: number) {
     this.ctx.beginPath();
-    this.ctx.arc(30, 30, 10, 0, 2 * Math.PI);
+    this.ctx.arc(x, y, this.size / 2, 0, 2 * Math.PI);
     this.ctx.fill();
   }
 
-  currentToolName(): ToolKind {
-    if (this.currentTool instanceof Pen) {
-      return "pen";
-    } else if (this.currentTool instanceof Eraser) {
-      return "eraser";
-    } else {
-      return "lasso";
+  private paintLine(px: number, py: number, x: number, y: number) {
+    this.ctx.beginPath();
+    this.ctx.moveTo(px, py);
+    this.ctx.lineTo(x, y);
+    this.ctx.lineWidth = this.size;
+    this.ctx.stroke();
+  }
+
+  render() {
+    this.ctx.fillStyle = this.color;
+    this.ctx.strokeStyle = this.color;
+
+    for (let i = 0; i < this.points.length; i++) {
+      const [x, y] = this.points[i];
+      this.paintCircle(x, y);
+
+      const previous = this.points[i - 1];
+      if (previous) {
+        this.paintLine(previous[0], previous[1], x, y);
+      }
     }
   }
 
-  setTool(name: ToolKind) {
-    switch (name) {
-      case "pen":
-        this.currentTool = new Pen(this, this.ctx);
-        break;
-      case "eraser":
-        this.currentTool = new Eraser(this, this.ctx);
-        break;
+  paint(x: number, y: number) {
+    this.ctx.fillStyle = this.color;
+    this.ctx.strokeStyle = this.color;
+    console.log(this.color);
+    this.paintCircle(x, y);
+
+    const last = this.points[this.points.length - 1];
+    if (last) {
+      this.paintLine(last[0], last[1], x, y);
+    }
+
+    this.points.push([x, y]);
+  }
+}
+
+export class CanvasObjectModel {
+  private stack: Path[];
+  private newPath: Path | undefined;
+  public isEraserMode: boolean = false;
+
+  constructor(
+    public readonly authorId: string,
+    public readonly ctx: CanvasRenderingContext2D,
+    public color: string,
+    public size: number = 5,
+    public eraserSize: number = 30,
+  ) {
+    this.stack = [];
+    this.ctx.globalCompositeOperation = "source-over";
+  }
+
+  render() {
+    for (const path of this.stack) {
+      path.render();
     }
   }
 
-  pushSnapshot() {
-    const { width, height } = this.state.getSize();
-    this.stack.push(this.ctx.getImageData(0, 0, width, height));
+  paint(x: number, y: number) {
+    if (!this.newPath) {
+      this.newPath = new Path(
+        this.ctx,
+        [],
+        this.authorId,
+        this.isEraserMode ? "white" : this.color,
+        this.isEraserMode ? this.eraserSize : this.size,
+      );
+    }
+
+    this.newPath.paint(x, y);
+  }
+
+  presentPath() {
+    if (this.newPath) {
+      this.stack.push(this.newPath);
+      this.newPath = undefined;
+    }
   }
 
   undo() {
-    const data = this.stack.pop();
+    let requireReRender = false;
 
-    if (data) {
-      this.ctx.putImageData(data, 0, 0);
+    for (const path of this.stack.toReversed()) {
+      if (path.userId === this.authorId) {
+        requireReRender = true;
+        this.stack.pop();
+        break;
+      }
+    }
+
+    if (requireReRender) {
+      this.clear();
+      this.render();
     }
   }
 
-  clear() {
+  private clear() {
     this.ctx.globalCompositeOperation = "destination-out";
     this.ctx.fillRect(0, 0, this.ctx.canvas.width, this.ctx.canvas.height);
     this.ctx.globalCompositeOperation = "source-over";
+  }
+
+  reset() {
+    this.stack = [];
+    this.clear();
   }
 }

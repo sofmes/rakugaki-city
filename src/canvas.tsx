@@ -1,9 +1,11 @@
 import { useEffect, useRef } from "hono/jsx";
+
 import createPanZoom from "panzoom";
-import { CanvasManager } from "./lib/canvas";
+import { CanvasObjectModel } from "./lib/canvas";
 
 export default function Canvas(props: {
-  setCanvasManager: (manager: CanvasManager) => void;
+  defaultColor: string;
+  setCom: (com: CanvasObjectModel) => void;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -15,20 +17,14 @@ export default function Canvas(props: {
     if (!ctx) throw new Error("キャンバスのContextの取得に失敗しました。");
 
     // キャンバスマネージャを用意。
-    const getSize = () => {
-      const rect = canvasRef.current?.getBoundingClientRect();
-      return rect as DOMRect;
-    };
-
-    const canvasManager = new CanvasManager(ctx, { getSize });
-    props.setCanvasManager(canvasManager);
+    const com = new CanvasObjectModel("me", ctx, props.defaultColor);
+    props.setCom(com);
 
     // マウスイベントを設定。
     const [panzoom, cleanUpPanZoom] = setupPanZoom(canvasRef.current);
-    console.log(2);
 
     const getScale = () => panzoom.getTransform().scale;
-    const cleanUpDraw = setupDrawEvent(canvasRef.current, canvasManager, {
+    const cleanUpDraw = setupDrawEvent(canvasRef.current, com, {
       getScale,
     });
 
@@ -48,6 +44,9 @@ function setupPanZoom(canvas: HTMLCanvasElement) {
     // マウスイベントの伝搬が阻害されないように設定。
     onClick: () => false,
     onTouch: () => false,
+
+    // ダブルクリックのズームを無効化。（Undoボタンの連打時に邪魔になる。）
+    zoomDoubleClickSpeed: 1,
 
     // 描画中に移動しないように、中ボタンか右クリックを押していないと動かないよう設定。
     beforeMouseDown: (e) => e.button !== MIDDLE_BUTTON,
@@ -69,7 +68,7 @@ function setupPanZoom(canvas: HTMLCanvasElement) {
 
 function setupDrawEvent(
   canvas: HTMLCanvasElement,
-  canvasManager: CanvasManager,
+  com: CanvasObjectModel,
   state: { getScale: () => number },
 ) {
   // 後で座標の計算に使う情報を用意する。
@@ -115,21 +114,23 @@ function setupDrawEvent(
     return event.button !== LEFT_BUTTON;
   }
 
+  let painting = false;
   const onDown = (event: MouseEvent) => {
     if (mouseFilter(event)) return;
 
     const pos = convertPosition(event.clientX, event.clientY);
     if (pos) {
-      canvasManager.currentTool.down();
+      painting = true;
+      com.paint(pos.x, pos.y);
     }
   };
 
   const onMove = (event: MouseEvent) => {
-    if (mouseFilter(event)) return;
+    if (mouseFilter(event) || !painting) return;
 
     const pos = convertPosition(event.clientX, event.clientY);
     if (pos) {
-      canvasManager.currentTool.move(pos.x, pos.y);
+      com.paint(pos.x, pos.y);
     }
   };
 
@@ -138,8 +139,10 @@ function setupDrawEvent(
 
     const pos = convertPosition(event.clientX, event.clientY);
     if (pos) {
-      canvasManager.currentTool.up();
+      com.presentPath();
     }
+
+    painting = false;
   };
 
   addEventListener("mousedown", onDown);

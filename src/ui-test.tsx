@@ -1,46 +1,58 @@
-import { createContext, memo, useContext, useEffect, useState, type PropsWithChildren } from "hono/jsx";
+import {
+  createContext,
+  memo,
+  type PropsWithChildren,
+  useContext,
+  useEffect,
+  useState,
+} from "hono/jsx";
 import { render } from "hono/jsx/dom";
 import Canvas from "./canvas";
-import type { CanvasManager } from "./lib/canvas";
-import type { ToolKind } from "./lib/canvas-tool";
+import type { CanvasObjectModel } from "./lib/canvas";
 
 const CanvasWithMemo = memo(Canvas);
 
 export default function UITest() {
-  const [manager, setManager] = useState<CanvasManager | null>(null);
+  const [com, setCom] = useState<CanvasObjectModel | null>(null);
 
   return (
     <>
       <Header />
       <Logo />
-      <CanvasWithMemo setCanvasManager={setManager} />
+      <CanvasWithMemo setCom={setCom} defaultColor="black" />
 
-      <canvasContext.Provider value={manager}>
+      <comContext.Provider value={com}>
         <div id="mainbox">
           <FirstBox />
 
           <SecondBox />
         </div>
-      </canvasContext.Provider>
+      </comContext.Provider>
     </>
   );
 }
 
-const canvasContext = createContext<CanvasManager | null>(null);
+const comContext = createContext<CanvasObjectModel | null>(null);
 
 function Header() {
   return <header id="header">落書きシティ</header>;
 }
 
-function ToolButton(props: PropsWithChildren<{
-  src: string;
-  name: string;
-  selected: boolean;
-  onClick: () => void;
-  className?: string;
-}>) {
+function ToolButton(
+  props: PropsWithChildren<{
+    src: string;
+    name: string;
+    selected: boolean;
+    onClick: () => void;
+    className?: string;
+  }>,
+) {
   return (
-    <button type="button" className={`basebtn ${props.className || ""}`} onClick={props.onClick}>
+    <button
+      type="button"
+      className={`basebtn ${props.className || ""}`}
+      onClick={props.onClick}
+    >
       <img
         src={props.src}
         alt={`${props.name}アイコン`}
@@ -53,8 +65,11 @@ function ToolButton(props: PropsWithChildren<{
   );
 }
 
-
-function ColorButton(props: {  name: string; selected: boolean; onClick: () => void }) {
+function ColorButton(props: {
+  name: string;
+  selected: boolean;
+  onClick: () => void;
+}) {
   return (
     <button type="button" className="basebtn" onClick={props.onClick}>
       <button
@@ -65,41 +80,59 @@ function ColorButton(props: {  name: string; selected: boolean; onClick: () => v
   );
 }
 
-
 //次回 色のボタンにアウトライン 切り替え
 function ColorSelect() {
   const [color, setColor] = useState<string>("black");
+  const com = useContext(comContext);
+
+  useEffect(() => {
+    if (!com) return;
+
+    com.color = color;
+  }, [color]);
 
   return (
     <div id="colorbox">
-      <ColorButton name="black" selected={color === "black"} onClick={() => setColor("black")} />
-      <ColorButton name="red" selected={color === "red"} onClick={() => setColor("red")} />
-      <ColorButton name="yellow" selected={color === "yellow"} onClick={() => setColor("yellow")} />
-      <ColorButton name="blue" selected={color === "blue"} onClick={() => setColor("blue")} />
+      <ColorButton
+        name="black"
+        selected={color === "black"}
+        onClick={() => setColor("black")}
+      />
+      <ColorButton
+        name="red"
+        selected={color === "red"}
+        onClick={() => setColor("red")}
+      />
+      <ColorButton
+        name="yellow"
+        selected={color === "yellow"}
+        onClick={() => setColor("yellow")}
+      />
+      <ColorButton
+        name="blue"
+        selected={color === "blue"}
+        onClick={() => setColor("blue")}
+      />
     </div>
   );
 }
 
 function FirstBox() {
   const [activeButton, setActiveButton] = useState<number | null>(null);
-  const manager = useContext(canvasContext);
+  const com = useContext(comContext);
 
   useEffect(() => {
-    if (!manager) return;
-
-    let name: ToolKind = "pen";
+    if (!com) return;
 
     switch (activeButton) {
       case 1:
-        name = "pen";
+        com.isEraserMode = false;
         break;
       case 2:
-        name = "eraser";
+        // 消しゴム
+        com.isEraserMode = true;
         break;
     }
-    console.log(1);
-
-    manager.setTool(name);
   }, [activeButton]);
 
   return (
@@ -113,7 +146,6 @@ function FirstBox() {
       >
         <ColorSelect />
       </ToolButton>
-
 
       <ToolButton
         src="src/icons/eraser.svg"
@@ -133,9 +165,23 @@ function FirstBox() {
 }
 
 function SecondBox() {
+  const com = useContext(comContext);
+
+  const reset = () => {
+    if (!com) return;
+
+    com.reset();
+  };
+
+  const undo = () => {
+    if (!com) return;
+
+    com.undo();
+  };
+
   return (
     <div id="secondbox">
-      <button type="button" className="basebtn">
+      <button type="button" className="basebtn" onClick={reset}>
         <img
           src="src/icons/trash-2.svg"
           alt="リセットアイコン"
@@ -143,11 +189,12 @@ function SecondBox() {
         />
         リセット
       </button>
-      <button type="button" className="basebtn">
+      <button type="button" className="basebtn" onClick={undo} id="undo-button">
         <img
           src="src/icons/undo-2.svg"
           alt="元に戻すアイコン"
           className="svg-icon"
+          id="undo-icon"
         />
         元に戻す
       </button>
