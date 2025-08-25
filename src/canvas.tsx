@@ -34,7 +34,11 @@ export default function Canvas(props: {
     };
   });
 
-  return <canvas ref={canvasRef} id="canvas" width="1200" height="900" />;
+  return (
+    <div id="canvas-container">
+      <canvas ref={canvasRef} id="canvas" width="1200" height="900" />
+    </div>
+  );
 }
 
 function setupPanZoom(canvas: HTMLCanvasElement) {

@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "hono": "^4.8.5",
+    "modern-normalize": "^3.0.1",
     "panzoom": "^9.4.3"
   },
   "devDependencies": {

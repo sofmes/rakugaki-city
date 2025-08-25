@@ -19,13 +19,14 @@ export default function UITest() {
     <>
       <Header />
       <Logo />
+
       <CanvasWithMemo setCom={setCom} defaultColor="blue" />
 
       <comContext.Provider value={com}>
         <div id="mainbox">
-          <FirstBox />
+          <ToolBox />
 
-          <SecondBox />
+          <UtilityBox />
         </div>
       </comContext.Provider>
     </>
@@ -58,7 +59,7 @@ function ToolButton(
         alt={`${props.name}アイコン`}
         className={`svg-icon ${props.selected ? "btn-selected" : ""}`}
       />
-      {props.name}
+      <div style="margin-inline: auto;">{props.name}</div>
 
       {props.children}
     </button>
@@ -71,12 +72,11 @@ function ColorButton(props: {
   onClick: () => void;
 }) {
   return (
-    <button type="button" className="basebtn" onClick={props.onClick}>
-      <button
-        type="button"
-        className={`color-btn bg-${props.name} ${props.selected ? "color-btn-selected" : ""}`}
-      />
-    </button>
+    <button
+      type="button"
+      className={`color-btn bg-${props.name} ${props.selected ? "color-btn-selected" : ""}`}
+      onClick={props.onClick}
+    />
   );
 }
 
@@ -87,7 +87,7 @@ function ColorSelect() {
   // useEffect使えば、colorの値が変更されるたびに、なんらかの処理ができる。
   // → ってことは、ここで、colorが変わるたびに、CanvasManagerのpenのcolorを変更する処理をすればいい。
   //
-  // 1. managerをFirstBoxにあるuseContext(canvasContext)で取得。
+  // 1. managerをtoolboxにあるuseContext(canvasContext)で取得。
   // 2. com.getTools() → penとeraserを取得。
   // 3. useEffectを使って、colorが変更されるたびに、penとeraserのpenからcolorを変更。コード例: pen.color = "red"
   useEffect(() => {
@@ -122,7 +122,7 @@ function ColorSelect() {
   );
 }
 
-function FirstBox() {
+function ToolBox() {
   const [activeButton, setActiveButton] = useState<number | null>(null);
   const com = useContext(comContext);
 
@@ -141,7 +141,7 @@ function FirstBox() {
   }, [activeButton]);
 
   return (
-    <div id="firstbox">
+    <div id="toolbox">
       <ToolButton
         src="src/icons/pen.svg"
         name="ペン"
@@ -169,7 +169,7 @@ function FirstBox() {
   );
 }
 
-function SecondBox() {
+function UtilityBox() {
   const com = useContext(comContext);
 
   const reset = () => {
@@ -185,14 +185,14 @@ function SecondBox() {
   };
 
   return (
-    <div id="secondbox">
+    <div id="utilitybox">
       <button type="button" className="basebtn" onClick={reset}>
         <img
           src="src/icons/trash-2.svg"
           alt="リセットアイコン"
           className="svg-icon"
         />
-        リセット
+        <div style="margin-inline: auto;">リセット</div>
       </button>
       <button type="button" className="basebtn" onClick={undo} id="undo-button">
         <img
@@ -201,7 +201,7 @@ function SecondBox() {
           className="svg-icon"
           id="undo-icon"
         />
-        元に戻す
+        <div style="margin-inline: auto;">元に戻す</div>
       </button>
     </div>
   );
