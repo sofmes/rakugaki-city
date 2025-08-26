@@ -101,10 +101,12 @@ export class CanvasRoom extends DurableObject {
   async undo(ws: WebSocket, payload: UndoPayload) {
     let requireReRender = false;
 
-    for (const path of this.stack.toReversed()) {
+    for (let i = this.stack.length - 1; i >= 0; i--) {
+      const path = this.stack[i];
+
       if (path.userId === payload.userId) {
         requireReRender = true;
-        this.stack.pop();
+        this.stack.splice(i, 1);
         break;
       }
     }
