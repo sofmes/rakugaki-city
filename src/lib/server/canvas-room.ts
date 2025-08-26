@@ -18,10 +18,16 @@ export class CanvasRoom extends DurableObject {
     const [client, server] = Object.values(new WebSocketPair());
     this.ctx.acceptWebSocket(server);
 
-    // キャンバスの永続化を行うため、初期化しておく。
+    // キャンバスの永続化を行うため、前回のデータの読み込みか初期化しておく。
     this.ctx.blockConcurrencyWhile(async () => {
       this.stack = (await this.ctx.storage.get("stack")) || [];
     });
+
+    // 誰も部屋にいなくなってからしばらくしたら部屋は消える。
+    // このため、新しい接続が来た時はアラームを削除しておく。
+    if ((await this.ctx.storage.getAlarm()) !== null) {
+      await this.ctx.storage.deleteAlarm();
+    }
 
     // 101: Switching Protocols
     return new Response(null, { status: 101, webSocket: client });
@@ -61,6 +67,16 @@ export class CanvasRoom extends DurableObject {
     _wasClean: boolean,
   ): Promise<void> {
     ws.close(code);
+
+    // 誰もいなくなってから10分したら部屋を消滅させたい。なので、アラームを設定する。
+    if (this.ctx.getWebSockets().length === 0) {
+      await this.ctx.storage.setAlarm(Date.now() + 1000 * 60 * 10);
+    }
+  }
+
+  async alarm(_alarmInfo?: AlarmInvocationInfo): Promise<void> {
+    // 10分間誰も接続しなかったため、消滅する。
+    await this.ctx.storage.deleteAll();
   }
 
   onRefreshRequest(ws: WebSocket) {
