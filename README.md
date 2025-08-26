@@ -40,7 +40,8 @@ pnpm run dev
   キャンバスをリセットして、スタックを削除する。
 
 ## 謝辞
-このプロジェクトは以下を参考にしました。ありがとうございます。
+このプロジェクトでは、キャンバスのズームなどに[panzoom](https://github.com/anvaka/panzoom/)を使用しました。  
+また、以下の文献を参考にしました。ありがとうございます。
 
 - https://github.com/cloudflare/workers-chat-demo/
 - https://blog.mooriii.com/entry/hono-durable-objects-tldraw
