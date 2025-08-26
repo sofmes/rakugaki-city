@@ -30,19 +30,18 @@ app.get("/", (c) => {
 // レート制限のチェックをするミドルウェア。
 // 悪戯で使われまくるのは色々と困る。
 app.use("/*", async (c, next) => {
-  let ip = "127.0.0.1"; // 本番環境以外の場合、全てローカルホストとして扱う。
-
-  if (c.env.PRODUCTION_MODE) {
-    const maybeip = c.req.header("CF-Connecting-IP");
-    if (maybeip === undefined)
-      return new Response(
-        "あなたのIPアドレスが不明のため、接続を開始できません。",
-        { status: 400 },
-      );
-
-    ip = maybeip;
+  let maybeip = c.req.header("CF-Connecting-IP");
+  if (import.meta.env.DEV) {
+    maybeip = "127.0.0.1";
   }
 
+  if (maybeip === undefined)
+    return new Response(
+      "あなたのIPアドレスが不明のため、接続を開始できません。",
+      { status: 400 },
+    );
+
+  const ip = maybeip;
   c.set("ip", ip);
 
   try {
