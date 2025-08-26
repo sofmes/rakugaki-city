@@ -37,6 +37,7 @@ export default function Canvas(props: {
  */
 function convertPosition(
   canvas: HTMLCanvasElement,
+  canvasScale: { canvasWidthRatio: number; canvasHeightRatio: number },
   panzoom: PanZoom,
   x: number,
   y: number,
@@ -48,8 +49,7 @@ function convertPosition(
     return null;
   }
 
-  const canvasWidthRatio = canvas.width / rect.width;
-  const canvasHeightRatio = canvas.height / rect.height;
+  const { canvasWidthRatio, canvasHeightRatio } = canvasScale;
   const zoomScale = panzoom.getTransform().scale;
 
   // canvasWidthRatio/canvasHeightRatio: キャンバスの表示上の横幅・縦幅と解像度の縦幅と横幅の比率
@@ -77,11 +77,7 @@ function setupPanZoom(canvas: HTMLCanvasElement) {
     zoomDoubleClickSpeed: 1,
 
     // 描画中に移動しないように、中ボタンか右クリックを押していないと動かないよう設定。
-    beforeMouseDown: (e) => {
-      if (convertPosition(canvas, instance, e.clientX, e.clientY) !== null) {
-        return e.button !== MIDDLE_BUTTON;
-      }
-    },
+    beforeMouseDown: (e) => e.button !== MIDDLE_BUTTON,
   });
 
   const rect = canvas.getBoundingClientRect();
@@ -108,6 +104,23 @@ function setupDrawEvent(
   panzoom: PanZoom,
   controller: CanvasController,
 ) {
+  const canvasScale = {
+    canvasWidthRatio: 0,
+    canvasHeightRatio: 0,
+  };
+
+  const onResize = () => {
+    const rect = canvas.getBoundingClientRect();
+    const x = innerWidth / 2 - rect.width / 2;
+    const y = innerHeight / 2 - rect.height / 2;
+    panzoom.moveTo(x, y);
+    panzoom.zoomAbs(x, y, 1);
+
+    canvasScale.canvasWidthRatio = canvas.width / rect.width;
+    canvasScale.canvasHeightRatio = canvas.height / rect.height;
+  };
+  onResize(); // 初期化
+
   const LEFT_BUTTON = 0;
   function mouseFilter(event: MouseEvent) {
     return event.button !== LEFT_BUTTON;
@@ -119,7 +132,13 @@ function setupDrawEvent(
   const onDown = (event: MouseEvent) => {
     if (mouseFilter(event)) return;
 
-    const pos = convertPosition(canvas, panzoom, event.clientX, event.clientY);
+    const pos = convertPosition(
+      canvas,
+      canvasScale,
+      panzoom,
+      event.clientX,
+      event.clientY,
+    );
     if (pos) {
       painting = true;
       controller.paint(pos.x, pos.y);
@@ -129,7 +148,13 @@ function setupDrawEvent(
   const onMove = (event: MouseEvent) => {
     if (mouseFilter(event) || !painting) return;
 
-    const pos = convertPosition(canvas, panzoom, event.clientX, event.clientY);
+    const pos = convertPosition(
+      canvas,
+      canvasScale,
+      panzoom,
+      event.clientX,
+      event.clientY,
+    );
     if (pos) {
       controller.paint(pos.x, pos.y);
     } else {
@@ -142,7 +167,13 @@ function setupDrawEvent(
   const onUp = (event: MouseEvent) => {
     if (mouseFilter(event)) return;
 
-    const pos = convertPosition(canvas, panzoom, event.clientX, event.clientY);
+    const pos = convertPosition(
+      canvas,
+      canvasScale,
+      panzoom,
+      event.clientX,
+      event.clientY,
+    );
     if (pos) {
       controller.presentPath();
     }
@@ -163,7 +194,13 @@ function setupDrawEvent(
     if (touchFilter(event)) return;
 
     const touch = event.touches[0];
-    const pos = convertPosition(canvas, panzoom, touch.clientX, touch.clientY);
+    const pos = convertPosition(
+      canvas,
+      canvasScale,
+      panzoom,
+      touch.clientX,
+      touch.clientY,
+    );
     if (pos) {
       panzoom.pause(); // 止めないと線を描こうとしてるのにキャンバスが動く。
 
@@ -176,7 +213,13 @@ function setupDrawEvent(
     if (touchFilter(event)) return;
 
     const touch = event.touches[0];
-    const pos = convertPosition(canvas, panzoom, touch.clientX, touch.clientY);
+    const pos = convertPosition(
+      canvas,
+      canvasScale,
+      panzoom,
+      touch.clientX,
+      touch.clientY,
+    );
     if (pos) {
       controller.paint(pos.x, pos.y);
     }
@@ -191,6 +234,8 @@ function setupDrawEvent(
     }
   };
 
+  addEventListener("resize", onResize);
+
   addEventListener("mousedown", onDown);
   addEventListener("mousemove", onMove);
   addEventListener("mouseup", onUp);
@@ -200,6 +245,8 @@ function setupDrawEvent(
   addEventListener("touchend", onTouchEnd);
 
   return () => {
+    removeEventListener("resize", onResize);
+
     removeEventListener("mousedown", onDown);
     removeEventListener("mousemove", onMove);
     removeEventListener("mouseup", onUp);
