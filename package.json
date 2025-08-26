@@ -11,8 +11,8 @@
   },
   "dependencies": {
     "hono": "^4.8.5",
-    "modern-normalize": "^3.0.1",
-    "panzoom": "^9.4.3"
+    "panzoom": "^9.4.3",
+    "sanitize.css": "^13.0.0"
   },
   "devDependencies": {
     "@biomejs/biome": "2.1.2",
