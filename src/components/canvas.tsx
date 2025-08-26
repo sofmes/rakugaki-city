@@ -73,17 +73,6 @@ function setupDrawEvent(
   controller: CanvasController,
   panzoom: PanZoom,
 ) {
-  // 後で座標の計算に使う情報を用意する。
-  // キャンバスの画面上の座標を基準にしたキャンバスの横幅と、絵の解像度の座標を基準にした横幅は違う。
-  // 例えば、解像度が1200*900の時、画面の大きさによってそのままのサイズで表示した場合、大きすぎるか小さすぎるので、
-  // 実際に表示されるキャンバスは拡大か縮小がされている。これは横幅だけでなく縦幅にも同じことが言える。
-  // これはすなわち、マウスの座標系とキャンバス内の座標系が違うということで、
-  // マウスの座標をキャンバス内の座標に変換するためには、拡大／縮小後の横幅・縦幅との比率を元に拡大／縮小を解除しなければならない。
-  // このため、比率を計算しておく。
-  const rect = canvas.getBoundingClientRect();
-  const canvasWidthRatio = canvas.width / rect.width;
-  const canvasHeightRatio = canvas.height / rect.height;
-
   /**
    * 画面上の座標を、キャンバス内での座標に変換する。もしキャンバス外だった場合、`null`を返す。
    */
@@ -98,6 +87,8 @@ function setupDrawEvent(
       return null;
     }
 
+    const canvasWidthRatio = canvas.width / rect.width;
+    const canvasHeightRatio = canvas.height / rect.height;
     const zoomScale = panzoom.getTransform().scale;
 
     // canvasWidthRatio/canvasHeightRatio: キャンバスの表示上の横幅・縦幅と解像度の縦幅と横幅の比率
