@@ -20,6 +20,10 @@ body {
   touch-action: none;
 }
 
+#client-components {
+  height: 100vh;
+}
+
 #header {
   position: absolute;
   top: 5px;
