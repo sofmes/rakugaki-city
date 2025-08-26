@@ -132,6 +132,10 @@ function setupDrawEvent(
     const pos = convertPosition(canvas, panzoom, event.clientX, event.clientY);
     if (pos) {
       controller.paint(pos.x, pos.y);
+    } else {
+      // 線の描画中に場外にとびでた場合、まだマウスが押されていても線は終了とする。
+      controller.presentPath();
+      painting = false;
     }
   };
 
