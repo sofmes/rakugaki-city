@@ -10,5 +10,10 @@
       { "name": "RATE_LIMIT", "class_name": "RateLimit" }
     ]
   },
-  "migrations": [{ "tag": "v1", "new_classes": ["CanvasRoom", "RateLimit"] }]
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["CanvasRoom", "RateLimit"]
+    }
+  ]
 }
