@@ -2,8 +2,12 @@ import { DurableObject } from "cloudflare:workers";
 
 const MILLISECONDS_PER_REQUEST = 1;
 const MILLISECONDS_FOR_UPDATES = 5000;
-const CAPACITY = 10000;
+const CAPACITY = 300;
 
+/**
+ * 同じIPからのアクセス制限を行うためのレート制限オブジェクト。
+ * 参考: https://developers.cloudflare.com/durable-objects/examples/build-a-rate-limiter/
+ */
 export class RateLimit extends DurableObject {
   // トークンバケット
   millisPerRequest: number = MILLISECONDS_PER_REQUEST;
