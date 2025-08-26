@@ -4,36 +4,63 @@ import {
   type PropsWithChildren,
   useContext,
   useEffect,
+  useMemo,
   useState,
 } from "hono/jsx";
 import { render } from "hono/jsx/dom";
-import Canvas from "./canvas";
-import type { CanvasObjectModel } from "./lib/canvas";
+import Canvas from "./components/canvas";
+import { CanvasObjectModel } from "./lib/client/canvas";
+import { Session } from "./lib/client/session";
 
 const CanvasWithMemo = memo(Canvas);
+const DEFAULT_COLOR = "blue" as const;
 
 export default function UITest() {
-  const [com, setCom] = useState<CanvasObjectModel | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+
+  const createCanvasController = useMemo(
+    () => (e: HTMLCanvasElement) => {
+      const ctx = e.getContext("2d");
+      if (!ctx) {
+        alert("キャンバスの準備に失敗しました。");
+        throw new Error("キャンバスのコンテクストの取得に失敗。");
+      }
+
+      // バックエンドに接続する。
+      const ws = new WebSocket(`${location.pathname}/ws`);
+      const userId = crypto.randomUUID();
+
+      const com = new CanvasObjectModel(userId, ctx, DEFAULT_COLOR);
+      const session = new Session(com, userId, ws);
+
+      setSession(session);
+      return session;
+    },
+    [],
+  );
 
   return (
     <>
       <Header />
       <Logo />
 
-      <CanvasWithMemo setCom={setCom} defaultColor="blue" />
+      <CanvasWithMemo
+        createCanvasSession={createCanvasController}
+        defaultColor={DEFAULT_COLOR}
+      />
 
-      <comContext.Provider value={com}>
+      <SessionContext.Provider value={session}>
         <div id="mainbox">
           <ToolBox />
 
           <UtilityBox />
         </div>
-      </comContext.Provider>
+      </SessionContext.Provider>
     </>
   );
 }
 
-const comContext = createContext<CanvasObjectModel | null>(null);
+const SessionContext = createContext<Session | null>(null);
 
 function Header() {
   return <header id="header">落書きシティ</header>;
@@ -83,7 +110,7 @@ function ColorButton(props: {
 //次回 色のボタンにアウトライン 切り替え
 function ColorSelect() {
   const [color, setColor] = useState<string>("blue");
-  const com = useContext(comContext);
+  const session = useContext(SessionContext);
   // useEffect使えば、colorの値が変更されるたびに、なんらかの処理ができる。
   // → ってことは、ここで、colorが変わるたびに、CanvasManagerのpenのcolorを変更する処理をすればいい。
   //
@@ -91,9 +118,9 @@ function ColorSelect() {
   // 2. com.getTools() → penとeraserを取得。
   // 3. useEffectを使って、colorが変更されるたびに、penとeraserのpenからcolorを変更。コード例: pen.color = "red"
   useEffect(() => {
-    if (!com) return;
+    if (!session) return;
 
-    com.color = color;
+    session.setColor(color);
   }, [color]);
 
   return (
@@ -124,18 +151,18 @@ function ColorSelect() {
 
 function ToolBox() {
   const [activeButton, setActiveButton] = useState<number | null>(null);
-  const com = useContext(comContext);
+  const session = useContext(SessionContext);
 
   useEffect(() => {
-    if (!com) return;
+    if (!session) return;
 
     switch (activeButton) {
       case 1:
-        com.isEraserMode = false;
+        session.setEraserMode(false);
         break;
       case 2:
         // 消しゴム
-        com.isEraserMode = true;
+        session.setEraserMode(true);
         break;
     }
   }, [activeButton]);
@@ -170,18 +197,18 @@ function ToolBox() {
 }
 
 function UtilityBox() {
-  const com = useContext(comContext);
+  const session = useContext(SessionContext);
 
   const reset = () => {
-    if (!com) return;
+    if (!session) return;
 
-    com.reset();
+    session.reset();
   };
 
   const undo = () => {
-    if (!com) return;
+    if (!session) return;
 
-    com.undo();
+    session.undo();
   };
 
   return (

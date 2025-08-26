@@ -1,6 +1,6 @@
-import type { Coord } from "./math";
+import type { Coord, PathData } from "../data";
 
-class Path {
+export class Path {
   constructor(
     public readonly ctx: CanvasRenderingContext2D,
     public readonly points: Coord[],
@@ -8,6 +8,19 @@ class Path {
     public readonly color: string,
     public readonly size: number,
   ) {}
+
+  static fromData(ctx: CanvasRenderingContext2D, data: PathData) {
+    return new Path(ctx, data.points, data.userId, data.color, data.size);
+  }
+
+  toData(): PathData {
+    return {
+      points: this.points,
+      userId: this.userId,
+      color: this.color,
+      size: this.size,
+    };
+  }
 
   private paintCircle(x: number, y: number) {
     this.ctx.beginPath();
@@ -91,9 +104,25 @@ export class CanvasObjectModel {
 
   presentPath() {
     if (this.newPath) {
-      this.stack.push(this.newPath);
+      const path = this.newPath;
       this.newPath = undefined;
+      this.stack.push(path);
+      return path;
     }
+  }
+
+  refresh(stackData: PathData[]) {
+    this.reset();
+
+    for (const pathData of stackData) {
+      this.push(pathData);
+    }
+  }
+
+  push(pathData: PathData) {
+    const path = Path.fromData(this.ctx, pathData);
+    path.render();
+    this.stack.push(path);
   }
 
   undo() {

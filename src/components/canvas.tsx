@@ -1,11 +1,11 @@
 import { useEffect, useRef } from "hono/jsx";
 
 import createPanZoom from "panzoom";
-import { CanvasObjectModel } from "./lib/canvas";
+import type { Session } from "../lib/client/session";
 
 export default function Canvas(props: {
   defaultColor: string;
-  setCom: (com: CanvasObjectModel) => void;
+  createCanvasSession: (canvasElement: HTMLCanvasElement) => Session;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -16,15 +16,13 @@ export default function Canvas(props: {
     const ctx = canvasRef.current.getContext("2d");
     if (!ctx) throw new Error("キャンバスのContextの取得に失敗しました。");
 
-    // キャンバスマネージャを用意。
-    const com = new CanvasObjectModel("me", ctx, props.defaultColor);
-    props.setCom(com);
+    const controller = props.createCanvasSession(canvasRef.current);
 
     // マウスイベントを設定。
     const [panzoom, cleanUpPanZoom] = setupPanZoom(canvasRef.current);
 
     const getScale = () => panzoom.getTransform().scale;
-    const cleanUpDraw = setupDrawEvent(canvasRef.current, com, {
+    const cleanUpDraw = setupDrawEvent(canvasRef.current, controller, {
       getScale,
     });
 
@@ -70,9 +68,14 @@ function setupPanZoom(canvas: HTMLCanvasElement) {
   ] as const;
 }
 
+interface CanvasController {
+  paint(x: number, y: number): void;
+  presentPath(): void;
+}
+
 function setupDrawEvent(
   canvas: HTMLCanvasElement,
-  com: CanvasObjectModel,
+  controller: CanvasController,
   state: { getScale: () => number },
 ) {
   // 後で座標の計算に使う情報を用意する。
@@ -125,7 +128,7 @@ function setupDrawEvent(
     const pos = convertPosition(event.clientX, event.clientY);
     if (pos) {
       painting = true;
-      com.paint(pos.x, pos.y);
+      controller.paint(pos.x, pos.y);
     }
   };
 
@@ -134,7 +137,7 @@ function setupDrawEvent(
 
     const pos = convertPosition(event.clientX, event.clientY);
     if (pos) {
-      com.paint(pos.x, pos.y);
+      controller.paint(pos.x, pos.y);
     }
   };
 
@@ -143,7 +146,7 @@ function setupDrawEvent(
 
     const pos = convertPosition(event.clientX, event.clientY);
     if (pos) {
-      com.presentPath();
+      controller.presentPath();
     }
 
     painting = false;
