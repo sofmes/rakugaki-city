@@ -5,28 +5,44 @@ import type { Session } from "../lib/client/session";
 
 export default function Canvas(props: {
   defaultColor: string;
-  createCanvasSession: (canvasElement: HTMLCanvasElement) => Session;
+  createCanvasSession: (
+    canvasElement: HTMLCanvasElement,
+  ) => Promise<Session | undefined>;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
-    if (!canvasRef.current)
-      throw new Error("キャンバスの取得ができませんでした。");
+    let cleanup = () => {};
 
-    const ctx = canvasRef.current.getContext("2d");
-    if (!ctx) throw new Error("キャンバスのContextの取得に失敗しました。");
+    const setup = async () => {
+      if (!canvasRef.current)
+        throw new Error("キャンバスの取得ができませんでした。");
 
-    const controller = props.createCanvasSession(canvasRef.current);
+      const ctx = canvasRef.current.getContext("2d");
+      if (!ctx) throw new Error("キャンバスのContextの取得に失敗しました。");
 
-    // マウスイベントを設定。
-    const [panzoom, cleanUpPanZoom] = setupPanZoom(canvasRef.current);
+      const controller = await props.createCanvasSession(canvasRef.current);
+      if (controller === undefined) {
+        return;
+      }
 
-    const cleanUpDraw = setupDrawEvent(canvasRef.current, panzoom, controller);
+      // マウスイベントを設定。
+      const [panzoom, cleanUpPanZoom] = setupPanZoom(canvasRef.current);
 
-    return () => {
-      cleanUpPanZoom();
-      cleanUpDraw();
+      const cleanUpDraw = setupDrawEvent(
+        canvasRef.current,
+        panzoom,
+        controller,
+      );
+
+      cleanup = () => {
+        cleanUpPanZoom();
+        cleanUpDraw();
+      };
     };
+    setup();
+
+    return cleanup;
   });
 
   return <canvas ref={canvasRef} id="canvas" width="1200" height="900" />;

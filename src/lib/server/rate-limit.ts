@@ -2,7 +2,7 @@ import { DurableObject } from "cloudflare:workers";
 
 const MILLISECONDS_PER_REQUEST = 1;
 const MILLISECONDS_FOR_UPDATES = 5000;
-const CAPACITY = 300;
+const CAPACITY = 50;
 
 /**
  * 同じIPからのアクセス制限を行うためのレート制限オブジェクト。

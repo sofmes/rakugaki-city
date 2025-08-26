@@ -19,7 +19,7 @@ export default function UITest() {
   const [session, setSession] = useState<Session | null>(null);
 
   const createCanvasController = useMemo(
-    () => (e: HTMLCanvasElement) => {
+    () => async (e: HTMLCanvasElement) => {
       const ctx = e.getContext("2d");
       if (!ctx) {
         alert("キャンバスの準備に失敗しました。");
@@ -30,7 +30,16 @@ export default function UITest() {
       const protocol = location.protocol === "https:" ? "wss:" : "ws:";
       const url = `${protocol}//${location.host}${location.pathname}/ws`;
       const ws = new WebSocket(url);
-      const userId = crypto.randomUUID();
+
+      const uidCoookieItem = await cookieStore.get("uid");
+      const userId = uidCoookieItem?.value;
+      if (uidCoookieItem === null || userId === undefined) {
+        alert("何らかのエラーが発生しました。再読み込みしてください。");
+        console.error(
+          "ユーザーIDがありませんでした。このため、処理を続行できません。",
+        );
+        return;
+      }
 
       const com = new CanvasObjectModel(userId, ctx, DEFAULT_COLOR);
       const session = new Session(com, userId, ws);

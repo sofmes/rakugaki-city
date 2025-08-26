@@ -1,4 +1,5 @@
 import { type Env, Hono } from "hono";
+import { getCookie, setCookie } from "hono/cookie";
 import { CanvasRoom } from "./lib/server/canvas-room";
 import { RateLimit } from "./lib/server/rate-limit";
 import { renderer } from "./renderer";
@@ -20,12 +21,6 @@ interface HonoEnv extends Env {
 const app = new Hono<HonoEnv>();
 
 app.use(renderer);
-
-app.get("/", (c) => {
-  const userId = crypto.randomUUID();
-
-  return c.redirect(`/0`); // TODO: 部屋を0以外も割り当てる。
-});
 
 // レート制限のチェックをするミドルウェア。
 // 悪戯で使われまくるのは色々と困る。
@@ -59,8 +54,23 @@ app.use("/*", async (c, next) => {
   await next();
 });
 
+app.use("/*", async (c, next) => {
+  // ユーザーIDを持っていない場合、ユーザーIDを登録する。
+  // 基本的に一人のユーザーにつき一つの部屋を持つことができる。
+  const uid = getCookie(c, "uid");
+  if (uid === undefined) {
+    setCookie(c, "uid", crypto.randomUUID());
+  }
+
+  await next();
+});
+
+app.get("/", (c) => {
+  return c.redirect(`/${crypto.randomUUID()}`); // TODO: 部屋を0以外も割り当てる。
+});
+
 // 絵チャの部屋
-app.get("/:roomId", (c) => {
+app.get("/:userId", (c) => {
   if (c.get("rateLimit") !== undefined) {
     c.status(429);
     return c.render(
@@ -79,7 +89,7 @@ app.get("/:roomId", (c) => {
 });
 
 // キャンバスの絵の情報のやりとりをするためのWebSocketエンドポイント
-app.get("/:roomId/ws", async (c) => {
+app.get("/:userId/ws", async (c) => {
   if (c.get("rateLimit") !== undefined) {
     return new Response("レート制限を受けたので、接続できません。", {
       status: 429,
@@ -95,8 +105,8 @@ app.get("/:roomId/ws", async (c) => {
     );
   }
 
-  const roomId = c.req.param("roomId");
-  const objId = c.env.CANVAS_ROOM.idFromName(roomId);
+  const userId = c.req.param("userId");
+  const objId = c.env.CANVAS_ROOM.idFromName(userId);
   const room = c.env.CANVAS_ROOM.get(objId);
 
   return await room.fetch(c.req.raw);
