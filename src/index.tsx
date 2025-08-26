@@ -83,7 +83,7 @@ app.get("/:userId", (c) => {
 
   return c.render(
     <>
-      <Script type="module" src="/src/components/room.tsx" />
+      <Script src="/src/components/room.tsx" />
       <div id="client-components" />
     </>,
   );
