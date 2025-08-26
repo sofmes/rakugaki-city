@@ -73,7 +73,7 @@ app.get("/:roomId", (c) => {
 
   return c.render(
     <>
-      <script type="module" src="/src/room.tsx" />
+      <script type="module" src="/src/components/room.tsx" />
       <div id="client-components" />
     </>,
   );

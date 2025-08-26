@@ -12,6 +12,12 @@ body {
   margin: 0;
   height: 100vh;
   overflow: hidden;
+
+  /*
+    スマホでズーム時、標準のズームではなくライブラリのpanzoomにズームを任せる。
+    このため、標準のズームはオフにする。
+  */
+  touch-action: none;
 }
 
 #header {

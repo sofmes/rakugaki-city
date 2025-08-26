@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "hono/jsx";
 
-import createPanZoom from "panzoom";
+import createPanZoom, { type PanZoom } from "panzoom";
 import type { Session } from "../lib/client/session";
 
 export default function Canvas(props: {
@@ -21,10 +21,7 @@ export default function Canvas(props: {
     // マウスイベントを設定。
     const [panzoom, cleanUpPanZoom] = setupPanZoom(canvasRef.current);
 
-    const getScale = () => panzoom.getTransform().scale;
-    const cleanUpDraw = setupDrawEvent(canvasRef.current, controller, {
-      getScale,
-    });
+    const cleanUpDraw = setupDrawEvent(canvasRef.current, controller, panzoom);
 
     return () => {
       cleanUpPanZoom();
@@ -32,11 +29,7 @@ export default function Canvas(props: {
     };
   });
 
-  return (
-    <div id="canvas-container">
-      <canvas ref={canvasRef} id="canvas" width="1200" height="900" />
-    </div>
-  );
+  return <canvas ref={canvasRef} id="canvas" width="1200" height="900" />;
 }
 
 function setupPanZoom(canvas: HTMLCanvasElement) {
@@ -45,7 +38,9 @@ function setupPanZoom(canvas: HTMLCanvasElement) {
   const instance = createPanZoom(canvas, {
     // マウスイベントの伝搬が阻害されないように設定。
     onClick: () => false,
-    onTouch: () => false,
+    onTouch: () => {
+      return false;
+    },
 
     // ダブルクリックのズームを無効化。（Undoボタンの連打時に邪魔になる。）
     zoomDoubleClickSpeed: 1,
@@ -76,7 +71,7 @@ interface CanvasController {
 function setupDrawEvent(
   canvas: HTMLCanvasElement,
   controller: CanvasController,
-  state: { getScale: () => number },
+  panzoom: PanZoom,
 ) {
   // 後で座標の計算に使う情報を用意する。
   // キャンバスの画面上の座標を基準にしたキャンバスの横幅と、絵の解像度の座標を基準にした横幅は違う。
@@ -103,7 +98,7 @@ function setupDrawEvent(
       return null;
     }
 
-    const zoomScale = state.getScale();
+    const zoomScale = panzoom.getTransform().scale;
 
     // canvasWidthRatio/canvasHeightRatio: キャンバスの表示上の横幅・縦幅と解像度の縦幅と横幅の比率
     //   これで座標を拡大／縮小された状態からされていない状態に戻す。
@@ -122,6 +117,8 @@ function setupDrawEvent(
   }
 
   let painting = false;
+
+  // マウスでの線の描画操作
   const onDown = (event: MouseEvent) => {
     if (mouseFilter(event)) return;
 
@@ -152,13 +149,62 @@ function setupDrawEvent(
     painting = false;
   };
 
+  const touchFilter = (e: TouchEvent) => {
+    if (e.touches.length !== 1) {
+      e.stopPropagation();
+      return true;
+    }
+    return false;
+  };
+
+  // スマホでの線の描画操作
+  const onTouchStart = (event: TouchEvent) => {
+    if (touchFilter(event)) return;
+
+    const touch = event.touches[0];
+    const pos = convertPosition(touch.clientX, touch.clientY);
+    if (pos) {
+      panzoom.pause(); // 止めないと線を描こうとしてるのにキャンバスが動く。
+
+      painting = true;
+      controller.paint(pos.x, pos.y);
+    }
+  };
+
+  const onTouchMove = (event: TouchEvent) => {
+    if (touchFilter(event)) return;
+
+    const touch = event.touches[0];
+    const pos = convertPosition(touch.clientX, touch.clientY);
+    if (pos) {
+      controller.paint(pos.x, pos.y);
+    }
+  };
+
+  const onTouchEnd = () => {
+    if (painting) {
+      controller.presentPath();
+      painting = false;
+
+      panzoom.resume();
+    }
+  };
+
   addEventListener("mousedown", onDown);
   addEventListener("mousemove", onMove);
   addEventListener("mouseup", onUp);
+
+  addEventListener("touchstart", onTouchStart);
+  addEventListener("touchmove", onTouchMove);
+  addEventListener("touchend", onTouchEnd);
 
   return () => {
     removeEventListener("mousedown", onDown);
     removeEventListener("mousemove", onMove);
     removeEventListener("mouseup", onUp);
+
+    removeEventListener("touchstart", onTouchStart);
+    removeEventListener("touchmove", onTouchMove);
+    removeEventListener("touchend", onTouchEnd);
   };
 }

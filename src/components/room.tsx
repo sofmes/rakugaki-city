@@ -8,9 +8,9 @@ import {
   useState,
 } from "hono/jsx";
 import { render } from "hono/jsx/dom";
-import Canvas from "./components/canvas";
-import { CanvasObjectModel } from "./lib/client/canvas";
-import { Session } from "./lib/client/session";
+import { CanvasObjectModel } from "../lib/client/canvas";
+import { Session } from "../lib/client/session";
+import Canvas from "./canvas";
 
 const CanvasWithMemo = memo(Canvas);
 const DEFAULT_COLOR = "blue" as const;
@@ -27,7 +27,9 @@ export default function UITest() {
       }
 
       // バックエンドに接続する。
-      const ws = new WebSocket(`${location.pathname}/ws`);
+      const protocol = location.protocol === "https:" ? "wss:" : "ws:";
+      const url = `${protocol}//${location.host}${location.pathname}/ws`;
+      const ws = new WebSocket(url);
       const userId = crypto.randomUUID();
 
       const com = new CanvasObjectModel(userId, ctx, DEFAULT_COLOR);
@@ -107,16 +109,10 @@ function ColorButton(props: {
   );
 }
 
-//次回 色のボタンにアウトライン 切り替え
 function ColorSelect() {
   const [color, setColor] = useState<string>("blue");
   const session = useContext(SessionContext);
-  // useEffect使えば、colorの値が変更されるたびに、なんらかの処理ができる。
-  // → ってことは、ここで、colorが変わるたびに、CanvasManagerのpenのcolorを変更する処理をすればいい。
-  //
-  // 1. managerをtoolboxにあるuseContext(canvasContext)で取得。
-  // 2. com.getTools() → penとeraserを取得。
-  // 3. useEffectを使って、colorが変更されるたびに、penとeraserのpenからcolorを変更。コード例: pen.color = "red"
+
   useEffect(() => {
     if (!session) return;
 
@@ -235,20 +231,8 @@ function UtilityBox() {
 }
 
 function Logo() {
-  return (
-    <img id="logo" src="public/sofume_logo.png" alt="落書きシティのロゴ" />
-  );
+  return <img id="logo" src="/sofume_logo.png" alt="落書きシティのロゴ" />;
 }
 
 const element = document.getElementById("client-components");
 render(<UITest />, element as HTMLElement);
-
-// function COUNTER() {
-//   const [count, Setcount] = useState(0)
-
-//   return (
-//     <button onClick={() => Setcount(count + 1)}>カウント: {count}</button>
-//   );
-// }
-
-//　ボタンの選択の時にボーダーを設定 Reactで 次回まで
