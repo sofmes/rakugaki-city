@@ -146,7 +146,7 @@ function ColorSelect() {
 }
 
 function ToolBox() {
-  const [activeButton, setActiveButton] = useState<number | null>(null);
+  const [activeButton, setActiveButton] = useState<number>(1);
   const session = useContext(SessionContext);
 
   useEffect(() => {
