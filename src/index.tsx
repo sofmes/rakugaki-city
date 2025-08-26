@@ -1,5 +1,6 @@
 import { type Env, Hono } from "hono";
 import { getCookie, setCookie } from "hono/cookie";
+import { Script } from "vite-ssr-components/hono";
 import { CanvasRoom } from "./lib/server/canvas-room";
 import { RateLimit } from "./lib/server/rate-limit";
 import { renderer } from "./renderer";
@@ -82,7 +83,7 @@ app.get("/:userId", (c) => {
 
   return c.render(
     <>
-      <script type="module" src="/src/components/room.tsx" />
+      <Script type="module" src="/src/components/room.tsx" />
       <div id="client-components" />
     </>,
   );
