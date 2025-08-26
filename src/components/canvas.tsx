@@ -21,7 +21,7 @@ export default function Canvas(props: {
     // マウスイベントを設定。
     const [panzoom, cleanUpPanZoom] = setupPanZoom(canvasRef.current);
 
-    const cleanUpDraw = setupDrawEvent(canvasRef.current, controller, panzoom);
+    const cleanUpDraw = setupDrawEvent(canvasRef.current, panzoom, controller);
 
     return () => {
       cleanUpPanZoom();
@@ -30,6 +30,37 @@ export default function Canvas(props: {
   });
 
   return <canvas ref={canvasRef} id="canvas" width="1200" height="900" />;
+}
+
+/**
+ * 画面上の座標を、キャンバス内での座標に変換する。もしキャンバス外だった場合、`null`を返す。
+ */
+function convertPosition(
+  canvas: HTMLCanvasElement,
+  panzoom: PanZoom,
+  x: number,
+  y: number,
+): { x: number; y: number } | null {
+  const rect = canvas.getBoundingClientRect();
+
+  // もしキャンバスの場外の座標だった場合、キャンバス内の座標に変換する意味がない。この場合無視。
+  if (rect.x > x || rect.y > y || rect.right < x || rect.bottom < y) {
+    return null;
+  }
+
+  const canvasWidthRatio = canvas.width / rect.width;
+  const canvasHeightRatio = canvas.height / rect.height;
+  const zoomScale = panzoom.getTransform().scale;
+
+  // canvasWidthRatio/canvasHeightRatio: キャンバスの表示上の横幅・縦幅と解像度の縦幅と横幅の比率
+  //   これで座標を拡大／縮小された状態からされていない状態に戻す。
+  // zoomScale: panzoomライブラリによる、ユーザーが行った拡大・縮小による拡大率。
+  //   これでpanzoomライブラリによる拡大・縮小された座標をキャンバス内の座標にする。
+
+  return {
+    x: ((x - rect.x) * canvasWidthRatio) / zoomScale,
+    y: ((y - rect.y) * canvasHeightRatio) / zoomScale,
+  };
 }
 
 function setupPanZoom(canvas: HTMLCanvasElement) {
@@ -46,7 +77,11 @@ function setupPanZoom(canvas: HTMLCanvasElement) {
     zoomDoubleClickSpeed: 1,
 
     // 描画中に移動しないように、中ボタンか右クリックを押していないと動かないよう設定。
-    beforeMouseDown: (e) => e.button !== MIDDLE_BUTTON,
+    beforeMouseDown: (e) => {
+      if (convertPosition(canvas, instance, e.clientX, e.clientY) !== null) {
+        return e.button !== MIDDLE_BUTTON;
+      }
+    },
   });
 
   const rect = canvas.getBoundingClientRect();
@@ -70,38 +105,9 @@ interface CanvasController {
 
 function setupDrawEvent(
   canvas: HTMLCanvasElement,
-  controller: CanvasController,
   panzoom: PanZoom,
+  controller: CanvasController,
 ) {
-  /**
-   * 画面上の座標を、キャンバス内での座標に変換する。もしキャンバス外だった場合、`null`を返す。
-   */
-  function convertPosition(
-    x: number,
-    y: number,
-  ): { x: number; y: number } | null {
-    const rect = canvas.getBoundingClientRect();
-
-    // もしキャンバスの場外の座標だった場合、キャンバス内の座標に変換する意味がない。この場合無視。
-    if (rect.x > x || rect.y > y || rect.right < x || rect.bottom < y) {
-      return null;
-    }
-
-    const canvasWidthRatio = canvas.width / rect.width;
-    const canvasHeightRatio = canvas.height / rect.height;
-    const zoomScale = panzoom.getTransform().scale;
-
-    // canvasWidthRatio/canvasHeightRatio: キャンバスの表示上の横幅・縦幅と解像度の縦幅と横幅の比率
-    //   これで座標を拡大／縮小された状態からされていない状態に戻す。
-    // zoomScale: panzoomライブラリによる、ユーザーが行った拡大・縮小による拡大率。
-    //   これでpanzoomライブラリによる拡大・縮小された座標をキャンバス内の座標にする。
-
-    return {
-      x: ((x - rect.x) * canvasWidthRatio) / zoomScale,
-      y: ((y - rect.y) * canvasHeightRatio) / zoomScale,
-    };
-  }
-
   const LEFT_BUTTON = 0;
   function mouseFilter(event: MouseEvent) {
     return event.button !== LEFT_BUTTON;
@@ -113,7 +119,7 @@ function setupDrawEvent(
   const onDown = (event: MouseEvent) => {
     if (mouseFilter(event)) return;
 
-    const pos = convertPosition(event.clientX, event.clientY);
+    const pos = convertPosition(canvas, panzoom, event.clientX, event.clientY);
     if (pos) {
       painting = true;
       controller.paint(pos.x, pos.y);
@@ -123,7 +129,7 @@ function setupDrawEvent(
   const onMove = (event: MouseEvent) => {
     if (mouseFilter(event) || !painting) return;
 
-    const pos = convertPosition(event.clientX, event.clientY);
+    const pos = convertPosition(canvas, panzoom, event.clientX, event.clientY);
     if (pos) {
       controller.paint(pos.x, pos.y);
     }
@@ -132,7 +138,7 @@ function setupDrawEvent(
   const onUp = (event: MouseEvent) => {
     if (mouseFilter(event)) return;
 
-    const pos = convertPosition(event.clientX, event.clientY);
+    const pos = convertPosition(canvas, panzoom, event.clientX, event.clientY);
     if (pos) {
       controller.presentPath();
     }
@@ -153,7 +159,7 @@ function setupDrawEvent(
     if (touchFilter(event)) return;
 
     const touch = event.touches[0];
-    const pos = convertPosition(touch.clientX, touch.clientY);
+    const pos = convertPosition(canvas, panzoom, touch.clientX, touch.clientY);
     if (pos) {
       panzoom.pause(); // 止めないと線を描こうとしてるのにキャンバスが動く。
 
@@ -166,7 +172,7 @@ function setupDrawEvent(
     if (touchFilter(event)) return;
 
     const touch = event.touches[0];
-    const pos = convertPosition(touch.clientX, touch.clientY);
+    const pos = convertPosition(canvas, panzoom, touch.clientX, touch.clientY);
     if (pos) {
       controller.paint(pos.x, pos.y);
     }
