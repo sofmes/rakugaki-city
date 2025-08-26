@@ -175,7 +175,7 @@ function ToolBox() {
   return (
     <div id="toolbox">
       <ToolButton
-        src="src/icons/pen.svg"
+        src="/icons/pen.svg"
         name="ペン"
         selected={activeButton === 1}
         onClick={() => setActiveButton(1)}
@@ -185,14 +185,14 @@ function ToolBox() {
       </ToolButton>
 
       <ToolButton
-        src="src/icons/eraser.svg"
+        src="/icons/eraser.svg"
         name="消しゴム"
         selected={activeButton === 2}
         onClick={() => setActiveButton(2)}
       />
 
       <ToolButton
-        src="src/icons/lasso.svg"
+        src="/icons/lasso.svg"
         name="投げ縄"
         selected={activeButton === 3}
         onClick={() => setActiveButton(3)}
@@ -220,7 +220,7 @@ function UtilityBox() {
     <div id="utilitybox">
       <button type="button" className="basebtn" onClick={reset}>
         <img
-          src="src/icons/trash-2.svg"
+          src="/icons/trash-2.svg"
           alt="リセットアイコン"
           className="svg-icon"
         />
@@ -228,7 +228,7 @@ function UtilityBox() {
       </button>
       <button type="button" className="basebtn" onClick={undo} id="undo-button">
         <img
-          src="src/icons/undo-2.svg"
+          src="/icons/undo-2.svg"
           alt="元に戻すアイコン"
           className="svg-icon"
           id="undo-icon"
