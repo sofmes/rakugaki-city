@@ -15,5 +15,9 @@
       "tag": "v1",
       "new_sqlite_classes": ["CanvasRoom", "RateLimit"]
     }
-  ]
+  ],
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1
+  }
 }
