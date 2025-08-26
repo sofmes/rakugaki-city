@@ -3,8 +3,12 @@
   "name": "rakugaki-city",
   "compatibility_date": "2024-04-01",
   "main": "./src/index.tsx",
+  "compatibility_flags": ["rpc"],
   "durable_objects": {
-    "bindings": [{ "name": "CANVAS_ROOM", "class_name": "CanvasRoom" }]
+    "bindings": [
+      { "name": "CANVAS_ROOM", "class_name": "CanvasRoom" },
+      { "name": "RATE_LIMIT", "class_name": "RateLimit" }
+    ]
   },
-  "migrations": [{ "tag": "v1", "new_classes": ["CanvasRoom"] }]
+  "migrations": [{ "tag": "v1", "new_classes": ["CanvasRoom", "RateLimit"] }]
 }

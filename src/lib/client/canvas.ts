@@ -54,7 +54,6 @@ export class Path {
   paint(x: number, y: number) {
     this.ctx.fillStyle = this.color;
     this.ctx.strokeStyle = this.color;
-    console.log(this.color);
     this.paintCircle(x, y);
 
     const last = this.points[this.points.length - 1];
@@ -125,13 +124,16 @@ export class CanvasObjectModel {
     this.stack.push(path);
   }
 
-  undo() {
+  undo(opts?: { userId?: string }) {
     let requireReRender = false;
+    const userId = opts?.userId === undefined ? this.authorId : opts.userId;
 
-    for (const path of this.stack.toReversed()) {
-      if (path.userId === this.authorId) {
+    for (let i = this.stack.length - 1; i >= 0; i--) {
+      const path = this.stack[i];
+
+      if (path.userId === userId) {
         requireReRender = true;
-        this.stack.pop();
+        this.stack.splice(i, 1);
         break;
       }
     }

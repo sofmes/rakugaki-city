@@ -79,10 +79,12 @@ export class CanvasRoom extends DurableObject {
   }
 
   async undo(ws: WebSocket, payload: UndoPayload) {
+    console.log("undostart", payload.userId);
     let requireReRender = false;
 
     for (const path of this.stack.toReversed()) {
-      if (path.userId === payload.authorId) {
+      if (path.userId === payload.userId) {
+        console.log(path.userId, payload.userId);
         requireReRender = true;
         this.stack.pop();
         break;
@@ -93,6 +95,9 @@ export class CanvasRoom extends DurableObject {
       await this.ctx.storage.put("stack", this.stack);
       this.broadcast(payload, ws);
     }
+
+    console.log("undo", payload.userId);
+    console.log("current", this.stack);
   }
 
   async reset(ws: WebSocket, payload: ResetPayload) {

@@ -18,7 +18,6 @@ export class Session {
     });
 
     this.ws.addEventListener("open", () => {
-      console.log(1);
       this.sendPayload({ type: "refresh_request" });
     });
   }
@@ -48,8 +47,8 @@ export class Session {
     this.com.push(payload.path);
   }
 
-  private onUndo(_payload: UndoPayload) {
-    this.com.undo();
+  private onUndo(payload: UndoPayload) {
+    this.com.undo({ userId: payload.userId });
   }
 
   private onReset(_payload: ResetPayload) {
@@ -57,7 +56,6 @@ export class Session {
   }
 
   private sendPayload(payload: Payload) {
-    console.log(payload);
     this.ws.send(JSON.stringify(payload));
   }
 
@@ -79,26 +77,26 @@ export class Session {
 
     this.sendPayload({
       type: "push",
-      authorId: this.authorId,
+      userId: this.authorId,
       path: path?.toData(),
     });
   }
 
   undo() {
-    this.com.undo();
-
     this.sendPayload({
       type: "undo",
-      authorId: this.authorId,
+      userId: this.authorId,
     });
+
+    this.com.undo();
   }
 
   reset() {
-    this.com.reset();
-
     this.sendPayload({
       type: "reset",
-      authorId: this.authorId,
+      userId: this.authorId,
     });
+
+    this.com.reset();
   }
 }

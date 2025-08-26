@@ -18,7 +18,7 @@ export interface PathData {
  */
 export interface PushPayload {
   type: "push";
-  authorId: string;
+  userId: string;
   path: PathData;
 }
 
@@ -27,7 +27,7 @@ export interface PushPayload {
  */
 export interface UndoPayload {
   type: "undo";
-  authorId: string;
+  userId: string;
 }
 
 /**
@@ -35,7 +35,7 @@ export interface UndoPayload {
  */
 export interface ResetPayload {
   type: "reset";
-  authorId: string;
+  userId: string;
 }
 
 export interface RefreshRequestPayload {
