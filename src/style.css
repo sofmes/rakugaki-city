@@ -68,7 +68,8 @@ body {
   justify-items: center;
   align-items: center;
   width: 15%;
-  gap: 20px;
+  gap: 25px;
+  padding: 0 15px;
   justify-content: center;
 }
 
