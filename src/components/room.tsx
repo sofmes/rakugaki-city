@@ -10,6 +10,7 @@ import {
 import { render } from "hono/jsx/dom";
 import { CanvasObjectModel } from "../lib/client/canvas";
 import { Session } from "../lib/client/session";
+import { getCookieValue } from "../lib/client/utils";
 import Canvas from "./canvas";
 
 const CanvasWithMemo = memo(Canvas);
@@ -62,11 +63,21 @@ export default function CanvasRoom() {
 async function connectWebSocket() {
   const protocol = location.protocol === "https:" ? "wss:" : "ws:";
   const url = `${protocol}//${location.host}${location.pathname}/ws`;
-  const ws = new WebSocket(url);
 
-  const uidCoookieItem = await cookieStore.get("uid");
-  const userId = uidCoookieItem?.value;
-  if (uidCoookieItem === null || userId === undefined) {
+  let ws: WebSocket;
+  try {
+    ws = new WebSocket(url);
+  } catch (e) {
+    alert(
+      "何らかのエラーが発生して、接続に失敗しました。" +
+        "共有機能は使えない状態になります。",
+    );
+    throw e;
+  }
+
+  const userId = await getCookieValue("uid"); // ユーザーのID
+  // TODO: いつかcookieStore.getを使う。
+  if (userId === null) {
     alert("何らかのエラーが発生しました。再読み込みしてください。");
     throw new Error(
       "ユーザーIDがありませんでした。このため、処理を続行できません。",
