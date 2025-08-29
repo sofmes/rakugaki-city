@@ -9,7 +9,10 @@ export const renderer = jsxRenderer(({ children }) => {
         <Link href="/src/style.css" rel="stylesheet" />
         <title>落書きシティ</title>
 
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta
+          name="viewport"
+          content="width=device-width, height=device-height, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"
+        />
       </head>
 
       <body>{children}</body>

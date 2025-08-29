@@ -9,11 +9,19 @@ h1 {
   font-family: Arial, Helvetica, sans-serif;
 }
 
-body {
+#mainbox {
   padding: 0;
   margin: 0;
   height: 100vh;
+  box-sizing: border-box;
   overflow: hidden;
+
+  /* キャンバスの操作ボタン等は固定なので、他の要素によって移動しないようにする。 */
+  max-height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 10;
 
   /*
     スマホでズーム時、標準のズームではなくライブラリのpanzoomにズームを任せる。
@@ -179,7 +187,7 @@ img.svg-icon {
 /* キャンバスのCSS */
 #canvas {
   /* 大きさを4:3にする。 */
-  height: 80vh;
+  height: 70vh;
   aspect-ratio: 4 / 3;
 
   /* わかりやすくするため、ボックスを可視化 */
@@ -190,32 +198,29 @@ img.svg-icon {
   height: 100vh;
 }
 
-@media (max-width: 830px) {
-  /* スマートフォン向けのスタイル */
+@media (max-width: 900px) {
+  /* スマートフォンやタブレット向けのスタイル */
+
   #mainbox {
     flex-direction: column-reverse;
-    padding-top: 70px;
-    padding-bottom: 50px;
-    box-sizing: border-box;
+    padding: 20px 0;
   }
 
   #toolbox {
     flex-direction: row;
-  
     width: 100vw;
-    
   }
 
   #utilitybox {
     flex-direction: row;
+    justify-content: center;
+    gap: 40px;
     width: 100vw;
   }
 
   #canvas {
-    height: 60vw;
-    aspect-ratio: 4 / 3;
-    justify-content: center;
-    align-items: center;
+    /* 小さめのタブレットの時のサイズを考慮して、少し小さくする。 */
+    height: 45vw;
   }
 
   #colorbox {
@@ -237,6 +242,18 @@ img.svg-icon {
     right: 5px;
     opacity: 0.3;
   }
+}
 
-  
+@media (max-width: 650px) {
+  /* スマホの時の表示 */
+
+  #mainbox {
+    /* タイトルやソフメロゴとボタンが被るので、余白を置く。 */
+    padding-top: 70px;
+    padding-bottom: 50px;
+  }
+
+  #canvas {
+    height: 50vw;
+  }
 }
