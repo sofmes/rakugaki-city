@@ -15,7 +15,7 @@ import Canvas from "./canvas";
 const CanvasWithMemo = memo(Canvas);
 const DEFAULT_COLOR = "blue" as const;
 
-export default function UITest() {
+export default function CanvasRoom() {
   const [session, setSession] = useState<Session | null>(null);
 
   const createCanvasController = useMemo(
@@ -27,19 +27,7 @@ export default function UITest() {
       }
 
       // バックエンドに接続する。
-      const protocol = location.protocol === "https:" ? "wss:" : "ws:";
-      const url = `${protocol}//${location.host}${location.pathname}/ws`;
-      const ws = new WebSocket(url);
-
-      const uidCoookieItem = await cookieStore.get("uid");
-      const userId = uidCoookieItem?.value;
-      if (uidCoookieItem === null || userId === undefined) {
-        alert("何らかのエラーが発生しました。再読み込みしてください。");
-        console.error(
-          "ユーザーIDがありませんでした。このため、処理を続行できません。",
-        );
-        return;
-      }
+      const [userId, ws] = await connectWebSocket();
 
       const com = new CanvasObjectModel(userId, ctx, DEFAULT_COLOR);
       const session = new Session(com, userId, ws);
@@ -56,7 +44,7 @@ export default function UITest() {
       <Logo />
 
       <CanvasWithMemo
-        createCanvasSession={createCanvasController}
+        createCanvasController={createCanvasController}
         defaultColor={DEFAULT_COLOR}
       />
 
@@ -71,11 +59,28 @@ export default function UITest() {
   );
 }
 
-const SessionContext = createContext<Session | null>(null);
+async function connectWebSocket() {
+  const protocol = location.protocol === "https:" ? "wss:" : "ws:";
+  const url = `${protocol}//${location.host}${location.pathname}/ws`;
+  const ws = new WebSocket(url);
+
+  const uidCoookieItem = await cookieStore.get("uid");
+  const userId = uidCoookieItem?.value;
+  if (uidCoookieItem === null || userId === undefined) {
+    alert("何らかのエラーが発生しました。再読み込みしてください。");
+    throw new Error(
+      "ユーザーIDがありませんでした。このため、処理を続行できません。",
+    );
+  }
+
+  return [userId, ws] as const;
+}
 
 function Header() {
   return <header id="header">落書きシティ</header>;
 }
+
+const SessionContext = createContext<Session | null>(null);
 
 function ToolButton(
   props: PropsWithChildren<{
@@ -244,4 +249,4 @@ function Logo() {
 }
 
 const element = document.getElementById("client-components");
-render(<UITest />, element as HTMLElement);
+render(<CanvasRoom />, element as HTMLElement);

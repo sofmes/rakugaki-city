@@ -1,13 +1,17 @@
 import { useEffect, useRef } from "hono/jsx";
 
 import createPanZoom, { type PanZoom } from "panzoom";
-import type { Session } from "../lib/client/session";
+
+interface CanvasController {
+  paint(x: number, y: number): void;
+  presentPath(): void;
+}
 
 export default function Canvas(props: {
   defaultColor: string;
-  createCanvasSession: (
+  createCanvasController: (
     canvasElement: HTMLCanvasElement,
-  ) => Promise<Session | undefined>;
+  ) => Promise<CanvasController>;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -21,10 +25,7 @@ export default function Canvas(props: {
       const ctx = canvasRef.current.getContext("2d");
       if (!ctx) throw new Error("キャンバスのContextの取得に失敗しました。");
 
-      const controller = await props.createCanvasSession(canvasRef.current);
-      if (controller === undefined) {
-        return;
-      }
+      const controller = await props.createCanvasController(canvasRef.current);
 
       // マウスイベントを設定。
       const [panzoom, cleanUpPanZoom] = setupPanZoom(canvasRef.current);
@@ -108,11 +109,6 @@ function setupPanZoom(canvas: HTMLCanvasElement) {
       instance.dispose();
     },
   ] as const;
-}
-
-interface CanvasController {
-  paint(x: number, y: number): void;
-  presentPath(): void;
 }
 
 function setupDrawEvent(
