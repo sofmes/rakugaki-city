@@ -13,14 +13,19 @@ body {
   overflow: hidden;
 }
 
+/* 接続中であることを示す、キャンバスの上に表示するオーバーレイ */
 #connecting {
+  /* 他の要素を無視して割り込む。 */
   position: absolute;
   z-index: 30;
 
+  /* 接続中の表示を中心に大きく表示する。 */
   display: flex;
   justify-content: center;
   align-items: center;
   font-size: 80px;
+
+  /* 接続中で操作できないことがわかるよう、キャンバスが薄く見えるようにする。 */
   background-color: rgb(255 255 255 / 80%);
 }
 
