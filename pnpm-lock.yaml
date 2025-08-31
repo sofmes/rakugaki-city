@@ -23,10 +23,13 @@ importers:
         version: 2.2.2
       '@cloudflare/vite-plugin':
         specifier: ^1.12.1
-        version: 1.12.1(vite@7.1.3)(workerd@1.20250823.0)(wrangler@4.33.1)
+        version: 1.12.1(vite@7.1.3(@types/node@24.3.0))(workerd@1.20250823.0)(wrangler@4.33.1)
+      '@types/node':
+        specifier: ^24.3.0
+        version: 24.3.0
       vite:
         specifier: ^7.1.3
-        version: 7.1.3
+        version: 7.1.3(@types/node@24.3.0)
       vite-ssr-components:
         specifier: ^0.5.1
         version: 0.5.1
@@ -731,6 +734,9 @@ packages:
   '@types/estree@1.0.8':
     resolution: {integrity: sha512-dWHzHa2WqEXI/O1E9OjrocMTKJl2mSrEolh1Iomrv6U+JuNwaHXsXx9bLu5gG7BUWFIN0skIQJQ/L1rIex4X6w==}
 
+  '@types/node@24.3.0':
+    resolution: {integrity: sha512-aPTXCrfwnDLj4VvXrm+UUCQjNEvJgNA8s5F1cvwQU+3KNltTOkBm1j30uNLyqqPNe7gE3KFzImYoZEfLhp4Yow==}
+
   acorn-walk@8.3.2:
     resolution: {integrity: sha512-cjkyv4OtNCIeqhHrfS81QWXoCBPExR/J62oyEqepVw8WaQeSqpW2uhuLPh1m9eWhDuOo/jUXVTlifvesOWp/4A==}
     engines: {node: '>=0.4.0'}
@@ -929,6 +935,9 @@ packages:
   ufo@1.6.1:
     resolution: {integrity: sha512-9a4/uxlTWJ4+a5i0ooc1rU7C7YOw3wT+UGqdeNNHWnOF9qcMBgLRS+4IYUqbczewFx4mLEig6gawh7X6mFlEkA==}
 
+  undici-types@7.10.0:
+    resolution: {integrity: sha512-t5Fy/nfn+14LuOc2KNYg75vZqClpAiqscVvMygNnlsHBFpSXdJaYtXMcdNLpl/Qvc3P2cB3s6lOV51nqsFq4ag==}
+
   undici@7.15.0:
     resolution: {integrity: sha512-7oZJCPvvMvTd0OlqWsIxTuItTpJBpU1tcbVl24FMn3xt3+VSunwUasmfPJRE57oNO1KsZ4PgA1xTdAX4hq8NyQ==}
     engines: {node: '>=20.18.1'}
@@ -1113,7 +1122,7 @@ snapshots:
     optionalDependencies:
       workerd: 1.20250823.0
 
-  '@cloudflare/vite-plugin@1.12.1(vite@7.1.3)(workerd@1.20250823.0)(wrangler@4.33.1)':
+  '@cloudflare/vite-plugin@1.12.1(vite@7.1.3(@types/node@24.3.0))(workerd@1.20250823.0)(wrangler@4.33.1)':
     dependencies:
       '@cloudflare/unenv-preset': 2.7.0(unenv@2.0.0-rc.19)(workerd@1.20250823.0)
       '@remix-run/node-fetch-server': 0.8.0
@@ -1122,7 +1131,7 @@ snapshots:
       picocolors: 1.1.1
       tinyglobby: 0.2.14
       unenv: 2.0.0-rc.19
-      vite: 7.1.3
+      vite: 7.1.3(@types/node@24.3.0)
       wrangler: 4.33.1
       ws: 8.18.0
     transitivePeerDependencies:
@@ -1481,6 +1490,10 @@ snapshots:
 
   '@types/estree@1.0.8': {}
 
+  '@types/node@24.3.0':
+    dependencies:
+      undici-types: 7.10.0
+
   acorn-walk@8.3.2: {}
 
   acorn@8.14.0: {}
@@ -1727,6 +1740,8 @@ snapshots:
 
   ufo@1.6.1: {}
 
+  undici-types@7.10.0: {}
+
   undici@7.15.0: {}
 
   unenv@2.0.0-rc.19:
@@ -1745,7 +1760,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  vite@7.1.3:
+  vite@7.1.3(@types/node@24.3.0):
     dependencies:
       esbuild: 0.25.9
       fdir: 6.5.0(picomatch@4.0.3)
@@ -1754,6 +1769,7 @@ snapshots:
       rollup: 4.49.0
       tinyglobby: 0.2.14
     optionalDependencies:
+      '@types/node': 24.3.0
       fsevents: 2.3.3
 
   wheel@1.0.0: {}

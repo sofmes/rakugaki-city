@@ -9,9 +9,7 @@ interface CanvasController {
 
 export default function Canvas(props: {
   defaultColor: string;
-  createCanvasController: (
-    canvasElement: HTMLCanvasElement,
-  ) => Promise<CanvasController>;
+  createController: (e: HTMLCanvasElement) => CanvasController | undefined;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -25,7 +23,7 @@ export default function Canvas(props: {
       const ctx = canvasRef.current.getContext("2d");
       if (!ctx) throw new Error("キャンバスのContextの取得に失敗しました。");
 
-      const controller = await props.createCanvasController(canvasRef.current);
+      const controller = props.createController(canvasRef.current);
 
       // マウスイベントを設定。
       const [panzoom, cleanUpPanZoom] = setupPanZoom(canvasRef.current);
@@ -33,7 +31,7 @@ export default function Canvas(props: {
       const cleanUpDraw = setupDrawEvent(
         canvasRef.current,
         panzoom,
-        controller,
+        () => controller,
       );
 
       cleanup = () => {
@@ -112,7 +110,7 @@ function setupPanZoom(canvas: HTMLCanvasElement) {
 function setupDrawEvent(
   canvas: HTMLCanvasElement,
   panzoom: PanZoom,
-  controller: CanvasController,
+  controller: () => CanvasController | undefined,
 ) {
   const canvasScale = {
     canvasWidthRatio: 0,
@@ -161,7 +159,7 @@ function setupDrawEvent(
     );
     if (pos) {
       painting = true;
-      controller.paint(pos.x, pos.y);
+      controller()?.paint(pos.x, pos.y);
     }
   };
 
@@ -176,10 +174,10 @@ function setupDrawEvent(
       event.clientY,
     );
     if (pos) {
-      controller.paint(pos.x, pos.y);
+      controller()?.paint(pos.x, pos.y);
     } else {
       // 線の描画中に場外にとびでた場合、まだマウスが押されていても線は終了とする。
-      controller.presentPath();
+      controller()?.presentPath();
       painting = false;
     }
   };
@@ -195,7 +193,7 @@ function setupDrawEvent(
       event.clientY,
     );
     if (pos) {
-      controller.presentPath();
+      controller()?.presentPath();
     }
 
     painting = false;
@@ -230,7 +228,7 @@ function setupDrawEvent(
       panzoom.pause(); // 止めないと線を描こうとしてるのにキャンバスが動く。
 
       painting = true;
-      controller.paint(pos.x, pos.y);
+      controller()?.paint(pos.x, pos.y);
     }
   };
 
@@ -246,13 +244,13 @@ function setupDrawEvent(
       touch.clientY,
     );
     if (pos) {
-      controller.paint(pos.x, pos.y);
+      controller()?.paint(pos.x, pos.y);
     }
   };
 
   const onTouchEnd = () => {
     if (painting) {
-      controller.presentPath();
+      controller()?.presentPath();
       painting = false;
 
       panzoom.resume();

@@ -11,3 +11,7 @@ export function getCookieValue(key: string) {
 
   return null;
 }
+
+export function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
