@@ -67,7 +67,7 @@ function Connecting(props: { canvas: HTMLCanvasElement }) {
         onMouseDown={(e) => e.stopPropagation()}
         style={style}
       >
-        接続中...
+        読み込み中...
       </div>
     </>
   );
