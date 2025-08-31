@@ -1,7 +1,7 @@
-import { memo, useMemo } from "hono/jsx";
+import { memo, useMemo, useState } from "hono/jsx";
 import { CanvasObjectModel } from "../../lib/client/canvas";
 import {
-  type ConnectionState,
+  type CanvasState,
   RemoteCanvas as RemoteCanvasConn,
 } from "../../lib/client/session";
 import { getCookieValue } from "../../lib/client/utils";
@@ -12,8 +12,8 @@ const CanvasMemoized = memo(Canvas);
 export function RemoteCanvasUI(props: {
   defaultColor: string;
   setRemoteCanvas: (canvas: RemoteCanvasConn) => void;
-  setConnState: (state: ConnectionState) => void;
 }) {
+  const [state, setState] = useState<CanvasState>("closed");
   const userId = getUserId();
 
   const createController = useMemo(
@@ -25,7 +25,7 @@ export function RemoteCanvasUI(props: {
       }
 
       const com = new CanvasObjectModel(userId, ctx, props.defaultColor);
-      const session = new RemoteCanvasConn(com, userId, props.setConnState);
+      const session = new RemoteCanvasConn(com, userId, setState);
       props.setRemoteCanvas(session);
 
       return session;
@@ -34,10 +34,25 @@ export function RemoteCanvasUI(props: {
   );
 
   return (
-    <CanvasMemoized
-      defaultColor={props.defaultColor}
-      createController={createController}
-    />
+    <div>
+      {state === "opened" ? null : <Connecting />}
+
+      <CanvasMemoized
+        defaultColor={props.defaultColor}
+        createController={createController}
+      />
+    </div>
+  );
+}
+
+function Connecting() {
+  return (
+    <>
+      {/* biome-ignore lint: 接続中操作できないようにするために、静的要素にonMouseDownを付けている。 */}
+      <div id="connecting" onMouseDown={(e) => e.stopPropagation()}>
+        接続中...
+      </div>
+    </>
   );
 }
 

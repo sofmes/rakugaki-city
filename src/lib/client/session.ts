@@ -8,19 +8,22 @@ import type {
 import type { CanvasObjectModel } from "./canvas";
 import { sleep } from "./utils";
 
-export type ConnectionState = "closed" | "opened";
+export type CanvasState = "closed" | "opened" | "refreshing";
 
 export class RemoteCanvas {
-  conn: Connection;
+  private readonly conn: Connection;
+  refreshing: boolean = false;
 
   constructor(
     public com: CanvasObjectModel,
     public readonly userId: string,
-    public readonly setState: (state: ConnectionState) => void,
+    public readonly setState: (state: CanvasState) => void,
   ) {
     this.conn = new Connection({
       onOpen: () => {
-        setState("opened");
+        setState("refreshing");
+
+        this.refreshing = true;
         this.conn.sendPayload({ type: "refresh_request" });
       },
       onClose: () => setState("closed"),
@@ -48,6 +51,8 @@ export class RemoteCanvas {
 
   private onRefresh(payload: RefreshPayload) {
     this.com.refresh(payload.stack);
+    this.refreshing = false;
+    this.setState("opened");
   }
 
   private onPush(payload: PushPayload) {
