@@ -86,9 +86,7 @@ function setupPanZoom(canvas: HTMLCanvasElement) {
   const instance = createPanZoom(canvas, {
     // マウスイベントの伝搬が阻害されないように設定。
     onClick: () => false,
-    onTouch: () => {
-      return false;
-    },
+    onTouch: () => false,
 
     // ダブルクリックのズームを無効化。（Undoボタンの連打時に邪魔になる。）
     zoomDoubleClickSpeed: 1,
@@ -133,16 +131,26 @@ function setupDrawEvent(
   };
   onResize(); // 初期化
 
+  const isButton = (element: unknown) => {
+    return (
+      element instanceof HTMLElement &&
+      (element instanceof HTMLButtonElement ||
+        element.parentElement instanceof HTMLButtonElement)
+    );
+  };
+
   const LEFT_BUTTON = 0;
-  function mouseFilter(event: MouseEvent) {
-    return event.button !== LEFT_BUTTON;
+  function mouseFilter(event: MouseEvent, isMouseDown: boolean) {
+    return (
+      (isMouseDown && isButton(event.target)) || event.button !== LEFT_BUTTON
+    );
   }
 
   let painting = false;
 
   // マウスでの線の描画操作
   const onDown = (event: MouseEvent) => {
-    if (mouseFilter(event)) return;
+    if (mouseFilter(event, true)) return;
 
     const pos = convertPosition(
       canvas,
@@ -158,7 +166,7 @@ function setupDrawEvent(
   };
 
   const onMove = (event: MouseEvent) => {
-    if (mouseFilter(event) || !painting) return;
+    if (mouseFilter(event, false) || !painting) return;
 
     const pos = convertPosition(
       canvas,
@@ -177,7 +185,7 @@ function setupDrawEvent(
   };
 
   const onUp = (event: MouseEvent) => {
-    if (mouseFilter(event)) return;
+    if (mouseFilter(event, false)) return;
 
     const pos = convertPosition(
       canvas,
@@ -193,17 +201,22 @@ function setupDrawEvent(
     painting = false;
   };
 
-  const touchFilter = (e: TouchEvent) => {
+  const touchFilter = (e: TouchEvent, isStart: boolean) => {
+    // ズーム時は、キャンバスを描画しない。
     if (e.touches.length !== 1) {
-      e.stopPropagation();
+      e.stopPropagation(); //
       return true;
     }
+
+    // ボタンを押した際は、キャンバスに描画しない。
+    if (isButton(e.target) && isStart) return true;
+
     return false;
   };
 
   // スマホでの線の描画操作
   const onTouchStart = (event: TouchEvent) => {
-    if (touchFilter(event)) return;
+    if (touchFilter(event, true)) return;
 
     const touch = event.touches[0];
     const pos = convertPosition(
@@ -222,7 +235,7 @@ function setupDrawEvent(
   };
 
   const onTouchMove = (event: TouchEvent) => {
-    if (touchFilter(event)) return;
+    if (touchFilter(event, false)) return;
 
     const touch = event.touches[0];
     const pos = convertPosition(
