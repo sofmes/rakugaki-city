@@ -1,6 +1,8 @@
 import { type Env, Hono } from "hono";
 import { getCookie, setCookie } from "hono/cookie";
-import { Script } from "vite-ssr-components/hono";
+import type { JSX } from "hono/jsx/jsx-runtime";
+import { Link, Script } from "vite-ssr-components/hono";
+import Manual from "./components/server/manual";
 import { CanvasRoom } from "./lib/server/canvas-room";
 import { RateLimit } from "./lib/server/rate-limit";
 import { renderer } from "./renderer";
@@ -17,6 +19,16 @@ interface HonoEnv extends Env {
       millisToNextRequest: number;
     };
   };
+}
+
+declare module "hono" {
+  interface ContextRenderer {
+    // biome-ignore lint/style/useShorthandFunctionType: typeによる定義にすると重複エラーになる。
+    (
+      content: string | Promise<string>,
+      props: { title?: string; head?: JSX.Element; viewport?: string },
+    ): Response;
+  }
 }
 
 const app = new Hono<HonoEnv>();
@@ -66,26 +78,42 @@ app.use("/*", async (c, next) => {
   await next();
 });
 
+app.get("/manual", (c) => {
+  return c.render(<Manual />, {
+    head: <Link href="/src/components/server/style.css" rel="stylesheet" />,
+  });
+});
+
 app.get("/", (c) => {
-  return c.redirect(`/${crypto.randomUUID()}`); // TODO: 部屋を0以外も割り当てる。
+  const uid = getCookie(c, "uid");
+  const roomPath = `/${uid}`;
+
+  return c.redirect(roomPath);
 });
 
 // 絵チャの部屋
 app.get("/:userId", (c) => {
   if (c.get("rateLimit") !== undefined) {
     c.status(429);
+
     return c.render(
       <h1 style="font-size: 42px;">
         アクセスが多く混雑しますので、現在あなたは使用できません。
       </h1>,
+      { title: "エラー" },
     );
   }
 
   return c.render(
     <>
-      <Script src="/src/components/room.tsx" />
+      <Script src="/src/components/client/room-app.tsx" />
       <div id="client-components" />
     </>,
+    {
+      head: <Link href="/src/components/client/style.css" rel="stylesheet" />,
+      viewport:
+        "width=device-width, height=device-height, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0",
+    },
   );
 });
 

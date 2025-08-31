@@ -1,18 +1,19 @@
 import { jsxRenderer } from "hono/jsx-renderer";
-import { Link, ViteClient } from "vite-ssr-components/hono";
+import { ViteClient } from "vite-ssr-components/hono";
 
-export const renderer = jsxRenderer(({ children }) => {
+export const renderer = jsxRenderer(({ children, title, head, viewport }) => {
   return (
     <html lang="ja">
       <head>
         <ViteClient />
-        <Link href="/src/style.css" rel="stylesheet" />
-        <title>落書きシティ</title>
+        <title>落書きシティ{title ? ` - ${title}` : ""}</title>
 
         <meta
           name="viewport"
-          content="width=device-width, height=device-height, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"
+          content={viewport ?? "width=device-width, height=device-height"}
         />
+
+        {head}
       </head>
 
       <body>{children}</body>
