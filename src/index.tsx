@@ -14,6 +14,7 @@ interface HonoBindings extends CloudflareBindings {
 interface HonoEnv extends Env {
   Bindings: HonoBindings;
   Variables: {
+    uid: string;
     ip: string;
     rateLimit?: {
       millisToNextRequest: number;
@@ -67,13 +68,16 @@ app.use("/*", async (c, next) => {
   await next();
 });
 
-app.use("/*", async (c, next) => {
-  // ユーザーIDを持っていない場合、ユーザーIDを登録する。
-  // 基本的に一人のユーザーにつき一つの部屋を持つことができる。
-  const uid = getCookie(c, "uid");
+// ユーザーIDを持っていない場合に、ユーザーIDを登録するミドルウェア。
+app.use(async (c, next) => {
+  let uid = getCookie(c, "uid");
+
   if (uid === undefined) {
-    setCookie(c, "uid", crypto.randomUUID());
+    uid = crypto.randomUUID();
+    setCookie(c, "uid", uid);
   }
+
+  c.set("uid", uid);
 
   await next();
 });
@@ -85,8 +89,7 @@ app.get("/manual", (c) => {
 });
 
 app.get("/", (c) => {
-  const uid = getCookie(c, "uid");
-  const roomPath = `/${uid}`;
+  const roomPath = `/${c.var.uid}`;
 
   return c.redirect(roomPath);
 });

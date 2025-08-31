@@ -69,6 +69,10 @@ async function connectWebSocket() {
     throw e;
   }
 
+  ws.addEventListener("error", (e) => {
+    console.log(e);
+  });
+
   const userId = await getCookieValue("uid"); // ユーザーのID
   // TODO: いつかcookieStore.getを使う。
   if (userId === null) {
