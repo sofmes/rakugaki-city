@@ -37,7 +37,9 @@ export function RemoteCanvasUI(props: {
 
   return (
     <>
-      {state === "opened" || !canvas ? null : <Connecting canvas={canvas} />}
+      {state === "opened" || !canvas || canvas.style.opacity === "0" ? null : (
+        <Connecting canvas={canvas} />
+      )}
 
       <CanvasMemoized
         defaultColor={props.defaultColor}

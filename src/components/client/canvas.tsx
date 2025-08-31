@@ -28,6 +28,11 @@ export default function Canvas(props: {
       // マウスイベントを設定。
       const [panzoom, cleanUpPanZoom] = setupPanZoom(canvasRef.current);
 
+      // 最初にキャンバスが中心に移動するが、この時に画面がちらつくのを防止する。
+      setTimeout(() => {
+        if (canvasRef.current) canvasRef.current.style.opacity = "100%";
+      }, 100);
+
       const cleanUpDraw = setupDrawEvent(
         canvasRef.current,
         panzoom,
@@ -44,7 +49,15 @@ export default function Canvas(props: {
     return cleanup;
   });
 
-  return <canvas ref={canvasRef} id="canvas" width="1200" height="900" />;
+  return (
+    <canvas
+      ref={canvasRef}
+      id="canvas"
+      width="1200"
+      height="900"
+      style="opacity: 0;"
+    />
+  );
 }
 
 /**
