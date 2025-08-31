@@ -8,9 +8,9 @@ import type {
 import type { CanvasObjectModel } from "./canvas";
 import { sleep } from "./utils";
 
-export type ConnectionState = "closed" | "connecting" | "opened";
+export type ConnectionState = "closed" | "opened";
 
-export class Session {
+export class RemoteCanvas {
   conn: Connection;
 
   constructor(

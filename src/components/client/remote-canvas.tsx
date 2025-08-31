@@ -1,14 +1,17 @@
 import { memo, useMemo } from "hono/jsx";
 import { CanvasObjectModel } from "../../lib/client/canvas";
-import { type ConnectionState, Session } from "../../lib/client/session";
+import {
+  type ConnectionState,
+  RemoteCanvas as RemoteCanvasConn,
+} from "../../lib/client/session";
 import { getCookieValue } from "../../lib/client/utils";
 import Canvas from "./canvas";
 
 const CanvasMemoized = memo(Canvas);
 
-export function RemoteCanvas(props: {
+export function RemoteCanvasUI(props: {
   defaultColor: string;
-  setSession: (session: Session) => void;
+  setRemoteCanvas: (canvas: RemoteCanvasConn) => void;
   setConnState: (state: ConnectionState) => void;
 }) {
   const userId = getUserId();
@@ -22,8 +25,8 @@ export function RemoteCanvas(props: {
       }
 
       const com = new CanvasObjectModel(userId, ctx, props.defaultColor);
-      const session = new Session(com, userId, props.setConnState);
-      props.setSession(session);
+      const session = new RemoteCanvasConn(com, userId, props.setConnState);
+      props.setRemoteCanvas(session);
 
       return session;
     },

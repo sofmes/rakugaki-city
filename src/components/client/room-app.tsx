@@ -1,15 +1,15 @@
 import { useState } from "hono/jsx";
 import { render } from "hono/jsx/dom";
-import type { ConnectionState, Session } from "../../lib/client/session";
-import { RemoteCanvas } from "./remote-canvas";
+import type { ConnectionState, RemoteCanvas } from "../../lib/client/session";
 import { ConnectionStateContext, SessionContext } from "./context";
+import { RemoteCanvasUI } from "./remote-canvas";
 import { ToolBox } from "./tool-box";
 import { UtilityBox } from "./utility-box";
 
 const DEFAULT_COLOR = "blue" as const;
 
 export default function RoomApp() {
-  const [session, setSession] = useState<Session | null>(null);
+  const [canvas, setCanvas] = useState<RemoteCanvas | null>(null);
   const [connState, setConnState] = useState<ConnectionState>("closed");
 
   return (
@@ -17,14 +17,14 @@ export default function RoomApp() {
       <header id="header">落書きシティ</header>
       <img id="logo" src="/sofume_logo.png" alt="落書きシティのロゴ" />
 
-      <RemoteCanvas
+      <RemoteCanvasUI
         defaultColor={DEFAULT_COLOR}
-        setSession={setSession}
+        setRemoteCanvas={setCanvas}
         setConnState={setConnState}
       />
 
       <ConnectionStateContext.Provider value={connState}>
-        <SessionContext.Provider value={session}>
+        <SessionContext.Provider value={canvas}>
           <div id="mainbox">
             <ToolBox />
             <UtilityBox />
