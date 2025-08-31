@@ -37,7 +37,7 @@ export function RemoteCanvasUI(props: {
 
   return (
     <>
-      {state === "opened" || !canvas || canvas.style.opacity === "0" ? null : (
+      {state === "opened" || !canvas ? null : (
         <Connecting canvas={canvas} />
       )}
 

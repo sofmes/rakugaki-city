@@ -212,8 +212,6 @@ img.svg-icon {
 
   /* わかりやすくするため、ボックスを可視化 */
   border: solid;
-
-  transition: opacity ease-in 0.5s;
 }
 
 @media (max-width: 900px) {

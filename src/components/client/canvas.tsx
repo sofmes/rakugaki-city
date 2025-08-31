@@ -14,30 +14,21 @@ export default function Canvas(props: {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    // 諸々のイベントハンドラやズーム昨日などのセットアップをする。
     let cleanup = () => {};
 
     const setup = async () => {
-      if (!canvasRef.current)
-        throw new Error("キャンバスの取得ができませんでした。");
-
-      const ctx = canvasRef.current.getContext("2d");
+      const ctx = canvas.getContext("2d");
       if (!ctx) throw new Error("キャンバスのContextの取得に失敗しました。");
 
-      const controller = props.createController(canvasRef.current);
+      const controller = props.createController(canvas);
 
       // マウスイベントを設定。
-      const [panzoom, cleanUpPanZoom] = setupPanZoom(canvasRef.current);
-
-      // 最初にキャンバスが中心に移動するが、この時に画面がちらつくのを防止する。
-      setTimeout(() => {
-        if (canvasRef.current) canvasRef.current.style.opacity = "100%";
-      }, 100);
-
-      const cleanUpDraw = setupDrawEvent(
-        canvasRef.current,
-        panzoom,
-        () => controller,
-      );
+      const [panzoom, cleanUpPanZoom] = setupPanZoom(canvas);
+      const cleanUpDraw = setupDrawEvent(canvas, panzoom, () => controller);
 
       cleanup = () => {
         cleanUpPanZoom();
@@ -49,15 +40,16 @@ export default function Canvas(props: {
     return cleanup;
   });
 
-  return (
-    <canvas
-      ref={canvasRef}
-      id="canvas"
-      width="1200"
-      height="900"
-      style="opacity: 0;"
-    />
-  );
+  return <canvas ref={canvasRef} id="canvas" width="1200" height="900" />;
+}
+
+function getCenter(e: HTMLElement) {
+  const rect = e.getBoundingClientRect();
+
+  return {
+    x: innerWidth / 2 - rect.width / 2,
+    y: innerHeight / 2 - rect.height / 2,
+  };
 }
 
 /**
@@ -94,6 +86,7 @@ function convertPosition(
 function setupPanZoom(canvas: HTMLCanvasElement) {
   const MIDDLE_BUTTON = 1;
 
+  const centerPos = getCenter(canvas);
   const instance = createPanZoom(canvas, {
     // マウスイベントの伝搬が阻害されないように設定。
     onClick: () => false,
@@ -104,13 +97,10 @@ function setupPanZoom(canvas: HTMLCanvasElement) {
 
     // 描画中に移動しないように、中ボタンか右クリックを押していないと動かないよう設定。
     beforeMouseDown: (e) => e.button !== MIDDLE_BUTTON,
-  });
 
-  const rect = canvas.getBoundingClientRect();
-  instance.moveTo(
-    innerWidth / 2 - rect.width / 2,
-    innerHeight / 2 - rect.height / 2,
-  );
+    initialX: centerPos.x,
+    initialY: centerPos.y,
+  });
 
   return [
     instance,
