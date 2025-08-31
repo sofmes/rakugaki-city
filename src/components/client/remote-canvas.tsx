@@ -36,14 +36,14 @@ export function RemoteCanvasUI(props: {
   );
 
   return (
-    <div>
+    <>
       {state === "opened" || !canvas ? null : <Connecting canvas={canvas} />}
 
       <CanvasMemoized
         defaultColor={props.defaultColor}
         createController={createController}
       />
-    </div>
+    </>
   );
 }
 

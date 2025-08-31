@@ -214,10 +214,6 @@ img.svg-icon {
   border: solid;
 }
 
-#canvas-container {
-  height: 100vh;
-}
-
 @media (max-width: 900px) {
   /* スマートフォンやタブレット向けのスタイル */
 
