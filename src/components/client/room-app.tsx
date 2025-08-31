@@ -4,7 +4,7 @@ import { CanvasObjectModel } from "../../lib/client/canvas";
 import { Session } from "../../lib/client/session";
 import { getCookieValue } from "../../lib/client/utils";
 import Canvas from "./canvas";
-import { SessionContext } from "./session";
+import { SessionContext } from "./context";
 import { ToolBox } from "./tool-box";
 import { UtilityBox } from "./utility-box";
 

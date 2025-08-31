@@ -1,5 +1,5 @@
 import { useContext } from "hono/jsx";
-import { SessionContext } from "./session";
+import { SessionContext } from "./context";
 
 /**
  * PCにおいて、右に表示されるボタン群を格納するボックス。

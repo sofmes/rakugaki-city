@@ -4,7 +4,7 @@ import {
   useEffect,
   useState,
 } from "hono/jsx";
-import { SessionContext } from "./session";
+import { SessionContext } from "./context";
 
 /**
  * PCの画面の左、スマホでの下に表示される、ボタン群を格納するボックス。
