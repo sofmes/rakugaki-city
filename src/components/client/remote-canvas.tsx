@@ -37,9 +37,7 @@ export function RemoteCanvasUI(props: {
 
   return (
     <>
-      {state === "opened" || !canvas ? null : (
-        <Connecting canvas={canvas} />
-      )}
+      {state === "opened" || !canvas ? null : <Connecting />}
 
       <CanvasMemoized
         defaultColor={props.defaultColor}
@@ -52,23 +50,11 @@ export function RemoteCanvasUI(props: {
 /**
  * キャンバスの位置に接続中の表示を行うコンポーネント。
  */
-function Connecting(props: { canvas: HTMLCanvasElement }) {
-  const rect = props.canvas.getBoundingClientRect();
-  const style = {
-    left: rect.left,
-    top: rect.top,
-    width: rect.width,
-    height: rect.height,
-  };
-
+function Connecting() {
   return (
     <>
       {/* biome-ignore lint: 接続中操作できないようにするために、静的要素にonMouseDownを付けている。 */}
-      <div
-        id="connecting"
-        onMouseDown={(e) => e.stopPropagation()}
-        style={style}
-      >
+      <div id="connecting" onMouseDown={(e) => e.stopPropagation()}>
         読み込み中...
       </div>
     </>

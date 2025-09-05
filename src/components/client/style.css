@@ -17,6 +17,10 @@ body {
 #connecting {
   /* 他の要素を無視して割り込む。 */
   position: absolute;
+  left: 0;
+  top: 0;
+  width: 100vw;
+  height: 100vh;
   z-index: 30;
 
   /* 接続中の表示を中心に大きく表示する。 */
