@@ -267,6 +267,10 @@ img.svg-icon {
 @media (max-width: 650px) {
   /* スマホの時の表示 */
 
+  #connecting {
+      font-size: 40px;
+  }
+  
   #mainbox {
     /* タイトルやソフメロゴとボタンが被るので、余白を置く。 */
     padding-top: 70px;
