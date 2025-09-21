@@ -94,6 +94,8 @@ function setupPanZoom(canvas: HTMLCanvasElement) {
 
     // ダブルクリックのズームを無効化。（Undoボタンの連打時に邪魔になる。）
     zoomDoubleClickSpeed: 1,
+    // 慣性の無効化。
+    smoothScroll: false,
 
     // 描画中に移動しないように、中ボタンか右クリックを押していないと動かないよう設定。
     beforeMouseDown: (e) => e.button !== MIDDLE_BUTTON,
@@ -205,7 +207,6 @@ function setupDrawEvent(
   const touchFilter = (e: TouchEvent, isStart: boolean) => {
     // ズーム時は、キャンバスを描画しない。
     if (e.touches.length !== 1) {
-      e.stopPropagation(); //
       return true;
     }
 
@@ -231,11 +232,16 @@ function setupDrawEvent(
       panzoom.pause(); // 止めないと線を描こうとしてるのにキャンバスが動く。
 
       painting = true;
-      controller()?.paint(pos.x, pos.y);
     }
   };
 
   const onTouchMove = (event: TouchEvent) => {
+    console.log(event.touches);
+    if (event.touches.length === 2) {
+      panzoom.resume();
+      return;
+    }
+
     if (touchFilter(event, false)) return;
 
     const touch = event.touches[0];
