@@ -1,6 +1,11 @@
+import Panzoom, { type PanzoomObject } from "@panzoom/panzoom";
 import { useEffect, useRef } from "hono/jsx";
-
-import createPanZoom, { type PanZoom } from "panzoom";
+import {
+  getCenter,
+  isInside,
+  translateToCanvasPos,
+} from "../../lib/client/math";
+import { ViewportScale } from "../../lib/client/scale-tracker";
 
 interface CanvasController {
   paint(x: number, y: number): void;
@@ -26,114 +31,138 @@ export default function Canvas(props: {
 
       const controller = props.createController(canvas);
 
-      // マウスイベントを設定。
-      const [panzoom, cleanUpPanZoom] = setupPanZoom(canvas);
-      const cleanUpDraw = setupDrawEvent(canvas, panzoom, () => controller);
+      // キャンバス関連の処理の準備
+      let panzoom: PanzoomObject | null = null;
+      let cleanUpPanzoom = () => {};
+
+      const scale = new ViewportScale(canvas, {
+        onResize: (rect) => {
+          if (panzoom) {
+            // 画面サイズが変わったら、キャンバスの位置を変える。
+            const pos = getCenter(canvas, rect);
+            panzoom.pan(pos.x, pos.y);
+          }
+        },
+      });
+
+      // Panzoomの準備。
+      [panzoom, cleanUpPanzoom] = setupPanzoom(canvas);
+
+      // マウスなどの操作イベントを受け取って描画をする処理の準備。
+      const cleanUpDraw = setupDrawEvent(
+        canvas,
+        scale,
+        panzoom,
+        () => controller,
+      );
 
       cleanup = () => {
-        cleanUpPanZoom();
+        cleanUpPanzoom();
         cleanUpDraw();
+        scale.unBind();
       };
     };
-    setup();
 
+    setup();
     return cleanup;
   });
 
   return <canvas ref={canvasRef} id="canvas" width="1200" height="900" />;
 }
 
-function getCenter(e: HTMLElement) {
-  const rect = e.getBoundingClientRect();
-
-  return {
-    x: innerWidth / 2 - rect.width / 2,
-    y: innerHeight / 2 - rect.height / 2,
-  };
-}
-
 /**
- * 画面上の座標を、キャンバス内での座標に変換する。もしキャンバス外だった場合、`null`を返す。
+ * キャンバスの移動やズームの処理をセットアップする。
  */
-function convertPosition(
-  canvas: HTMLCanvasElement,
-  canvasScale: { canvasWidthRatio: number; canvasHeightRatio: number },
-  panzoom: PanZoom,
-  x: number,
-  y: number,
-): { x: number; y: number } | null {
-  const rect = canvas.getBoundingClientRect();
-
-  // もしキャンバスの場外の座標だった場合、キャンバス内の座標に変換する意味がない。この場合無視。
-  if (rect.x > x || rect.y > y || rect.right < x || rect.bottom < y) {
-    return null;
-  }
-
-  const { canvasWidthRatio, canvasHeightRatio } = canvasScale;
-  const zoomScale = panzoom.getTransform().scale;
-
-  // canvasWidthRatio/canvasHeightRatio: キャンバスの表示上の横幅・縦幅と解像度の縦幅と横幅の比率
-  //   これで座標を拡大／縮小された状態からされていない状態に戻す。
-  // zoomScale: panzoomライブラリによる、ユーザーが行った拡大・縮小による拡大率。
-  //   これでpanzoomライブラリによる拡大・縮小された座標をキャンバス内の座標にする。
-
-  return {
-    x: ((x - rect.x) * canvasWidthRatio) / zoomScale,
-    y: ((y - rect.y) * canvasHeightRatio) / zoomScale,
-  };
-}
-
-function setupPanZoom(canvas: HTMLCanvasElement) {
-  const MIDDLE_BUTTON = 1;
+function setupPanzoom(canvas: HTMLCanvasElement) {
+  const MIDDLE_BUTTONS = 4;
 
   const centerPos = getCenter(canvas);
-  const instance = createPanZoom(canvas, {
-    // マウスイベントの伝搬が阻害されないように設定。
-    onClick: () => false,
-    onTouch: () => false,
+  const panzoom = Panzoom(canvas, {
+    // キャンバスモードにする。
+    canvas: true,
 
-    // ダブルクリックのズームを無効化。（Undoボタンの連打時に邪魔になる。）
-    zoomDoubleClickSpeed: 1,
-    // 慣性の無効化。
-    smoothScroll: false,
+    // 最初は中心に配置
+    startX: centerPos.x,
+    startY: centerPos.y,
 
-    // 描画中に移動しないように、中ボタンか右クリックを押していないと動かないよう設定。
-    beforeMouseDown: (e) => e.button !== MIDDLE_BUTTON,
+    // キャンバス内での挙動をカスタムするため（後述）
+    noBind: true,
 
-    initialX: centerPos.x,
-    initialY: centerPos.y,
+    // カーソル
+    cursor: "unset",
+
+    handleStartEvent: (e: Event) => {
+      e.preventDefault();
+    },
   });
 
+  // ズーム機能の提供
+  addEventListener("wheel", panzoom.zoomWithWheel);
+
+  // パン機能の提供
+  let isPinch = false;
+  const onMayBePinch = (e: TouchEvent) => {
+    // 後々必要になる情報なので、ピンチかどうかを追跡する。
+    isPinch = e.touches.length > 1;
+  };
+
+  addEventListener("touchstart", onMayBePinch);
+  addEventListener("touchmove", onMayBePinch);
+
+  // キャンバス内で指をなぞった時は、キャンバスを移動させるのではなく線を描きたい。
+  // また、キャンバスの外でなくとも、二本指操作によるピンチは描画ではなくズームとしたい。
+  // この、パン／ズームを行うかどうかを取得する関数。
+  const shouldHandle = (e: PointerEvent) =>
+    !isInside(canvas, e.clientX, e.clientY) ||
+    e.buttons === MIDDLE_BUTTONS ||
+    isPinch;
+
+  const onPointerDown = (e: PointerEvent) => {
+    if (shouldHandle(e) || e.pointerType !== "mouse") {
+      panzoom.handleDown(e);
+    }
+  };
+
+  const onPointerMove = (e: PointerEvent) => {
+    if (shouldHandle(e)) {
+      panzoom.handleMove(e);
+    }
+  };
+
+  const onPointerUp = (e: PointerEvent) => {
+    panzoom.handleUp(e);
+  };
+
+  addEventListener("pointerdown", onPointerDown);
+  addEventListener("pointermove", onPointerMove);
+  addEventListener("pointerup", onPointerUp);
+
   return [
-    instance,
+    panzoom,
     () => {
-      instance.dispose();
+      removeEventListener("touchstart", onMayBePinch);
+      removeEventListener("touchmove", onMayBePinch);
+
+      removeEventListener("pointerdown", onPointerDown);
+      removeEventListener("pointermove", onPointerMove);
+      removeEventListener("pointerup", onPointerUp);
+
+      panzoom.destroy();
     },
   ] as const;
 }
 
+/**
+ * キャンバスの描画をするのに使うマウスなどのイベントをセットアップする。
+ */
 function setupDrawEvent(
   canvas: HTMLCanvasElement,
-  panzoom: PanZoom,
+  scale: ViewportScale,
+  panzoom: PanzoomObject,
   controller: () => CanvasController | undefined,
 ) {
-  const canvasScale = {
-    canvasWidthRatio: 0,
-    canvasHeightRatio: 0,
-  };
-
-  const onResize = () => {
-    const rect = canvas.getBoundingClientRect();
-    const x = innerWidth / 2 - rect.width / 2;
-    const y = innerHeight / 2 - rect.height / 2;
-    panzoom.moveTo(x, y);
-    panzoom.zoomAbs(x, y, 1);
-
-    canvasScale.canvasWidthRatio = canvas.width / rect.width;
-    canvasScale.canvasHeightRatio = canvas.height / rect.height;
-  };
-  onResize(); // 初期化
-
+  // ボタンを押す時は、描画はせずそのボタンを押す動作のみにしたい。
+  // それを識別するための関数。
   const isButton = (element: unknown) => {
     return (
       element instanceof HTMLElement &&
@@ -142,26 +171,25 @@ function setupDrawEvent(
     );
   };
 
+  // マウスの押し方が、描画すべき押し方に該当するかどうかを取得する。
   const LEFT_BUTTON = 0;
-  function mouseFilter(event: MouseEvent, isMouseDown: boolean) {
-    return (
-      (isMouseDown && isButton(event.target)) || event.button !== LEFT_BUTTON
-    );
-  }
+  const mouseFilter = (event: MouseEvent, isMouseDown: boolean) =>
+    (isMouseDown && isButton(event.target)) || event.button !== LEFT_BUTTON;
 
+  // マウスでの線の描画操作のイベントハンドラたち。
   let painting = false;
 
-  // マウスでの線の描画操作
   const onDown = (event: MouseEvent) => {
     if (mouseFilter(event, true)) return;
 
-    const pos = convertPosition(
+    const pos = translateToCanvasPos(
       canvas,
-      canvasScale,
-      panzoom,
+      scale,
+      panzoom.getScale(),
       event.clientX,
       event.clientY,
     );
+
     if (pos) {
       painting = true;
       controller()?.paint(pos.x, pos.y);
@@ -171,17 +199,21 @@ function setupDrawEvent(
   const onMove = (event: MouseEvent) => {
     if (mouseFilter(event, false) || !painting) return;
 
-    const pos = convertPosition(
+    const pos = translateToCanvasPos(
       canvas,
-      canvasScale,
-      panzoom,
+      scale,
+      panzoom.getScale(),
       event.clientX,
       event.clientY,
     );
+
     if (pos) {
       controller()?.paint(pos.x, pos.y);
     } else {
       // 線の描画中に場外にとびでた場合、まだマウスが押されていても線は終了とする。
+      // こうしないと、場外に飛び出たあとにキャンバスにマウスが行くと、
+      // 途切れた場所からそこまで線が伸びてしまい、意図せぬ描画となってしまう。
+
       controller()?.presentPath();
       painting = false;
     }
@@ -190,13 +222,14 @@ function setupDrawEvent(
   const onUp = (event: MouseEvent) => {
     if (mouseFilter(event, false)) return;
 
-    const pos = convertPosition(
+    const pos = translateToCanvasPos(
       canvas,
-      canvasScale,
-      panzoom,
+      scale,
+      panzoom.getScale(),
       event.clientX,
       event.clientY,
     );
+
     if (pos) {
       controller()?.presentPath();
     }
@@ -204,54 +237,48 @@ function setupDrawEvent(
     painting = false;
   };
 
+  // 描画すべきタッチ操作かどうかを判断する関数。
   const touchFilter = (e: TouchEvent, isStart: boolean) => {
-    // ズーム時は、キャンバスを描画しない。
+    // ズーム時は、キャンバスを描画したくないので、一つの指だけのタッチか確認する。
     if (e.touches.length !== 1) {
       return true;
     }
 
-    // ボタンを押した際は、キャンバスに描画しない。
+    // ツール切り替えといったボタンを押した際は、キャンバスに描画しない。
     if (isButton(e.target) && isStart) return true;
 
     return false;
   };
 
-  // スマホでの線の描画操作
   const onTouchStart = (event: TouchEvent) => {
     if (touchFilter(event, true)) return;
 
     const touch = event.touches[0];
-    const pos = convertPosition(
+    const pos = translateToCanvasPos(
       canvas,
-      canvasScale,
-      panzoom,
+      scale,
+      panzoom.getScale(),
       touch.clientX,
       touch.clientY,
     );
-    if (pos) {
-      panzoom.pause(); // 止めないと線を描こうとしてるのにキャンバスが動く。
 
+    if (pos) {
       painting = true;
     }
   };
 
   const onTouchMove = (event: TouchEvent) => {
-    console.log(event.touches);
-    if (event.touches.length === 2) {
-      panzoom.resume();
-      return;
-    }
-
     if (touchFilter(event, false)) return;
 
     const touch = event.touches[0];
-    const pos = convertPosition(
+    const pos = translateToCanvasPos(
       canvas,
-      canvasScale,
-      panzoom,
+      scale,
+      panzoom.getScale(),
       touch.clientX,
       touch.clientY,
     );
+
     if (pos) {
       controller()?.paint(pos.x, pos.y);
     }
@@ -261,12 +288,8 @@ function setupDrawEvent(
     if (painting) {
       controller()?.presentPath();
       painting = false;
-
-      panzoom.resume();
     }
   };
-
-  addEventListener("resize", onResize);
 
   addEventListener("mousedown", onDown);
   addEventListener("mousemove", onMove);
@@ -277,8 +300,6 @@ function setupDrawEvent(
   addEventListener("touchend", onTouchEnd);
 
   return () => {
-    removeEventListener("resize", onResize);
-
     removeEventListener("mousedown", onDown);
     removeEventListener("mousemove", onMove);
     removeEventListener("mouseup", onUp);

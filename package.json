@@ -10,8 +10,8 @@
     "cf-typegen": "wrangler types --env-interface CloudflareBindings"
   },
   "dependencies": {
+    "@panzoom/panzoom": "^4.6.0",
     "hono": "^4.9.5",
-    "panzoom": "^9.4.3",
     "sanitize.css": "^13.0.0"
   },
   "devDependencies": {
