@@ -44,6 +44,7 @@ export default function Canvas(props: {
           }
         },
       });
+      scale.bind();
 
       // Panzoomの準備。
       [panzoom, cleanUpPanzoom] = setupPanzoom(canvas);
