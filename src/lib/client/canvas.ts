@@ -1,5 +1,8 @@
 import type { Coord, PathData } from "../data";
 
+/**
+ * ペンを下してから上げるまでに描いた線の描画情報。
+ */
 export class Path {
   constructor(
     public readonly ctx: CanvasRenderingContext2D,
@@ -13,6 +16,9 @@ export class Path {
     return new Path(ctx, data.points, data.userId, data.color, data.size);
   }
 
+  /**
+   * JSONに変換できる状態にする。
+   */
   toData(): PathData {
     return {
       points: this.points,
@@ -36,6 +42,9 @@ export class Path {
     this.ctx.stroke();
   }
 
+  /**
+   * キャンバスに線を描画する。
+   */
   render() {
     this.ctx.fillStyle = this.color;
     this.ctx.strokeStyle = this.color;
@@ -51,6 +60,9 @@ export class Path {
     }
   }
 
+  /**
+   * 描画情報を記録しつつ、キャンバスに描画する。
+   */
   paint(x: number, y: number) {
     this.ctx.fillStyle = this.color;
     this.ctx.strokeStyle = this.color;
@@ -65,6 +77,13 @@ export class Path {
   }
 }
 
+/**
+ * キャンバス上のオブジェクトを管理するためのクラス。
+ *
+ * 基本的には線を描く度にスタックへ`Path`を重ねていく。
+ * 「元に戻す」時は、直近に追加した`Path`を削除し、
+ * キャンバスをリセットしてスタック上の`Path`を１から順番に描画しなおす。
+ */
 export class CanvasObjectModel {
   private stack: Path[];
   private newPath: Path | undefined;
@@ -81,12 +100,19 @@ export class CanvasObjectModel {
     this.ctx.globalCompositeOperation = "source-over";
   }
 
+  /**
+   * スタックにあるパスを１から全て描画する。（`Path.render`を呼び出す。）
+   */
   render() {
     for (const path of this.stack) {
       path.render();
     }
   }
 
+  /**
+   * 現在描画中の`Path`の`paint`を呼び出す。
+   * もし新しい線であれば、現在のペンの色情報を基に新しい`Path`を作る。
+   */
   paint(x: number, y: number) {
     if (!this.newPath) {
       this.newPath = new Path(
@@ -101,6 +127,9 @@ export class CanvasObjectModel {
     this.newPath.paint(x, y);
   }
 
+  /**
+   * `paint`で描いていた線（`Path`）を描画終了とし、スタックに追加する。
+   */
   presentPath() {
     if (this.newPath) {
       const path = this.newPath;
@@ -110,6 +139,9 @@ export class CanvasObjectModel {
     }
   }
 
+  /**
+   * 指定されたデータでスタックの中身を交換し、キャンバスに反映する。
+   */
   refresh(stackData: PathData[]) {
     this.reset();
 
@@ -118,12 +150,18 @@ export class CanvasObjectModel {
     }
   }
 
+  /**
+   * 渡されたデータのパスを描画してスタックに追加する。
+   */
   push(pathData: PathData) {
     const path = Path.fromData(this.ctx, pathData);
     path.render();
     this.stack.push(path);
   }
 
+  /**
+   * 直近に描いた線（`Path`）をスタックから削除し、キャンバスを１から描画し直す。
+   */
   undo(opts?: { userId?: string }) {
     let requireReRender = false;
     const userId = opts?.userId === undefined ? this.authorId : opts.userId;
@@ -150,6 +188,9 @@ export class CanvasObjectModel {
     this.ctx.globalCompositeOperation = "source-over";
   }
 
+  /**
+   * スタック含め、キャンバスを全てリセットする。
+   */
   reset() {
     this.stack = [];
     this.clear();
