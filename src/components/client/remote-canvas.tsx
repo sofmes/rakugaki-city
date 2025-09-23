@@ -9,6 +9,9 @@ import Canvas from "./canvas";
 
 const CanvasMemoized = memo(Canvas);
 
+/**
+ * キャンバスに共有する機能を付け加えたコンポーネント
+ */
 export function RemoteCanvasUI(props: {
   defaultColor: string;
   setRemoteCanvas: (canvas: RemoteCanvasConn) => void;
@@ -67,6 +70,7 @@ function getUserId() {
 
   if (userId === null) {
     alert("何らかのエラーが発生しました。再読み込みしてください。");
+
     throw new Error(
       "ユーザーIDがありませんでした。このため、処理を続行できません。",
     );

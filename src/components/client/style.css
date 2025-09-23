@@ -1,14 +1,12 @@
 @import "sanitize.css";
 
 * {
+    /* 描画中に文字列を選択しないようにする。 */
     user-select: none;
     -webkit-user-select: none;
 }
 
-h1 {
-    font-family: Arial, Helvetica, sans-serif;
-}
-
+/* キャンバスなどが画面からはみ出てもスクロールバーが表示されないようにする。 */
 body {
     overflow: hidden;
 }
@@ -33,6 +31,7 @@ body {
     background-color: rgb(255 255 255 / 80%);
 }
 
+/* アプリの主要なコンポーネント群を格納するHTML要素のスタイル。 */
 #mainbox {
     padding: 0;
     margin: 0;
@@ -42,22 +41,31 @@ body {
 
     /* キャンバスの操作ボタン等は固定なので、他の要素によって移動しないようにする。 */
     max-height: 100vh;
+    width: 100%;
+    height: 100%;
     position: fixed;
     top: 0;
     left: 0;
     z-index: 10;
 
+    /* 中身の配置 */
+    display: flex;
+    justify-content: space-between;
+    flex-direction: row;
+
     /*
-    スマホでズーム時、標準のズームではなくライブラリのpanzoomにズームを任せる。
-    このため、標準のズームはオフにする。
-  */
+        スマホでズーム時、標準のズームではなくライブラリのpanzoomにズームを任せる。
+        このため、標準のズームはオフにする。
+    */
     touch-action: none;
 }
 
+/* クライアントコンポーネントをのせる場所の高さを画面高さにしておく。 */
 #client-components {
     height: 100vh;
 }
 
+/* 左上のタイトル */
 #header {
     position: absolute;
     top: 5px;
@@ -66,6 +74,7 @@ body {
     font-weight: bold;
 }
 
+/* 右下のソフメロゴ */
 #logo {
     width: 150px;
     height: auto;
@@ -75,25 +84,7 @@ body {
     opacity: 0.3;
 }
 
-#thirdbox {
-    align-self: center;
-    width: 700px;
-    height: 600px;
-    border: solid;
-    margin: auto;
-}
-
-#mainbox {
-    display: flex;
-    justify-content: space-between;
-    flex-direction: row;
-    width: 100%;
-    height: 100%;
-    position: fixed;
-    top: 0;
-    left: 0;
-}
-
+/* 道具選択 */
 #toolbox {
     display: flex;
     flex-direction: column;
@@ -105,11 +96,30 @@ body {
     justify-content: center;
 }
 
+
+/* ペンボタン */
 .pen-btn {
     /* 色選択のボックスの場所を相対指定するためにrelativeを設定する。 */
     position: relative;
 }
 
+/* 色選択 */
+#colorbox {
+    /* ボタンは横並びにする。 */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+
+    /* 位置（大きい画面の場合で、ペンボタンの右） */
+    position: absolute;
+    top: 50%;
+    left: 100%;
+    translate: 0 -50%;
+}
+
+/* 色選択ボタン */
 .color-btn {
     border-radius: 20%;
     width: 20px;
@@ -118,20 +128,7 @@ body {
     cursor: pointer;
 }
 
-#colorbox {
-    display: flex;
-    gap: 8px;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-
-    /* 位置 */
-    position: absolute;
-    top: 50%;
-    left: 100%;
-    translate: 0 -50%;
-}
-
+/*色選択ボタン用の背景色クラスたち */
 .bg-black {
     background-color: black;
 }
@@ -148,6 +145,7 @@ body {
     background-color: blue;
 }
 
+/* 色選択ボタンが選択厨の時の表示で、輪郭線を表示する。 */
 .color-btn-selected {
     outline: solid;
     border-radius: 20%;
@@ -155,6 +153,7 @@ body {
     outline-offset: 2px;
 }
 
+/* その他、ユーティリティボタン群（リセットと元に戻すを格納するボックス） */
 #utilitybox {
     display: flex;
     flex-direction: column;
@@ -165,47 +164,51 @@ body {
     margin-right: 0;
 }
 
+/* SVGのアイコンのためのクラス。 */
 img.svg-icon {
     width: 50%;
     margin: auto;
     padding: 3px;
 }
 
-.basebtn {
+/* 一般的なボタンに共通するスタイル */
+.base-btn {
     padding: 5px;
     width: 90px;
-    background-color: transparent;
+
+    /* 中身は縦並びで中央にする。 */
     display: flex;
     flex-direction: column;
     justify-content: center;
-    border: none;
-    cursor: pointer;
-    outline: none;
-    appearance: none;
-    gap: 5px;
     text-align: center;
+    gap: 5px;
+
+    /* リセットCSS */
+    border: none;
+    outline: none;
+    background-color: transparent;
+
+    /* 見た目 */
+    cursor: pointer;
+    appearance: none;
     color: black;
 }
 
+/* 一般的なボタンの選択時のスタイル */
 .btn-selected {
     background-color: transparent;
+
+    /* 縦並び */
     display: flex;
     flex-direction: column;
     justify-content: center;
-    border-width: 3px;
+
+    /* 輪郭線 */
     outline: solid;
+    border-width: 3px;
     border-radius: 5px;
     outline-width: 3px;
     outline-color: black;
-}
-
-.rightbtn {
-    width: 6%;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    background-color: transparent;
-    float: right;
 }
 
 /* キャンバスのCSS */
@@ -218,10 +221,10 @@ img.svg-icon {
     border: solid;
 }
 
+/* スマートフォンやタブレット向けのスタイル */
 @media (max-width: 900px) {
-    /* スマートフォンやタブレット向けのスタイル */
-
     #mainbox {
+        /* 小さい画面の場合は入りきらないので、下に道具選択を置く縦並びにする。 */
         flex-direction: column-reverse;
         padding: 20px 0;
     }
@@ -254,6 +257,7 @@ img.svg-icon {
         translate: -50% calc(-100% - 10px);
     }
 
+    /*  */
     #logo {
         width: 150px;
         height: auto;
@@ -264,10 +268,10 @@ img.svg-icon {
     }
 }
 
+/* スマホの時の表示 */
 @media (max-width: 650px) {
-    /* スマホの時の表示 */
-
     #connecting {
+        /* 横幅が狭く大きすぎないようにする。 */
         font-size: 40px;
     }
 

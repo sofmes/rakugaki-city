@@ -21,7 +21,7 @@ export function UtilityBox() {
 
   return (
     <div id="utilitybox">
-      <button type="button" className="basebtn" onClick={reset}>
+      <button type="button" className="base-btn" onClick={reset}>
         <img
           src="/icons/trash-2.svg"
           alt="リセットアイコン"
@@ -30,7 +30,12 @@ export function UtilityBox() {
         <div style="margin-inline: auto;">リセット</div>
       </button>
 
-      <button type="button" className="basebtn" onClick={undo} id="undo-button">
+      <button
+        type="button"
+        className="base-btn"
+        onClick={undo}
+        id="undo-button"
+      >
         <img
           src="/icons/undo-2.svg"
           alt="元に戻すアイコン"

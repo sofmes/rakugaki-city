@@ -57,6 +57,9 @@ export function ToolBox() {
   );
 }
 
+/**
+ * 道具切り替えに使うボタン。
+ */
 function ToolButton(
   props: PropsWithChildren<{
     src: string;
@@ -69,7 +72,7 @@ function ToolButton(
   return (
     <button
       type="button"
-      className={`basebtn ${props.className || ""}`}
+      className={`base-btn ${props.className || ""}`}
       onClick={props.onClick}
     >
       <img
