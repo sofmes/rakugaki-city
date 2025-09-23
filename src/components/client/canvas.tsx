@@ -90,10 +90,6 @@ function setupPanzoom(canvas: HTMLCanvasElement) {
 
     // カーソル
     cursor: "unset",
-
-    handleStartEvent: (e: Event) => {
-      e.preventDefault();
-    },
   });
 
   // ズーム機能の提供
