@@ -22,7 +22,7 @@ export default function Canvas(props: {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    // 諸々のイベントハンドラやズーム昨日などのセットアップをする。
+    // 諸々のイベントハンドラやズーム機能などのセットアップをする。
     let cleanup = () => {};
 
     const setup = async () => {
