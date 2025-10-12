@@ -6,6 +6,10 @@
     -webkit-user-select: none;
 }
 
+html {
+    touch-action: none;
+}
+
 /* キャンバスなどが画面からはみ出てもスクロールバーが表示されないようにする。 */
 body {
     overflow: hidden;
@@ -35,7 +39,6 @@ body {
 #mainbox {
     padding: 0;
     margin: 0;
-    height: 100vh;
     box-sizing: border-box;
     overflow: hidden;
 
@@ -95,7 +98,6 @@ body {
     padding: 0 15px;
     justify-content: center;
 }
-
 
 /* ペンボタン */
 .pen-btn {
