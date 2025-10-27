@@ -46,13 +46,6 @@ export function ToolBox() {
         selected={activeButton === 2}
         onClick={() => setActiveButton(2)}
       />
-
-      <ToolButton
-        src="/icons/lasso.svg"
-        name="投げ縄"
-        selected={activeButton === 3}
-        onClick={() => setActiveButton(3)}
-      />
     </div>
   );
 }
