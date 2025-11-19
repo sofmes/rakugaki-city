@@ -8,14 +8,14 @@
 ## セットアップ方法
 
 このプロジェクトでは、パッケージマネージャとしてpnpmを使用する。
-そのため、まずはそれをインストールする必要がある。
+それがインストールされていることを確認した後、
 
 ```shell
 # 依存関係のインストール
-pnpm install
+$ pnpm install --frozen-lockfile
 
 # 開発サーバーの起動
-pnpm run dev
+$ pnpm run dev
 ```
 
 ## 設計
