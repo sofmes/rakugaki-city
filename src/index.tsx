@@ -2,6 +2,7 @@ import { type Env, Hono } from "hono";
 import { getCookie, setCookie } from "hono/cookie";
 import type { JSX } from "hono/jsx/jsx-runtime";
 import { Link, Script } from "vite-ssr-components/hono";
+import Home from "./components/server/home";
 import Manual from "./components/server/manual";
 import { CanvasRoom } from "./lib/server/canvas-room";
 import { RateLimit } from "./lib/server/rate-limit";
@@ -91,7 +92,9 @@ app.get("/manual", (c) => {
 app.get("/", (c) => {
   const roomPath = `/${c.var.uid}`;
 
-  return c.redirect(roomPath);
+  return c.render(<Home ownRoomPath={roomPath} />, {
+    head: <Link href="/src/components/server/style.css" rel="stylesheet" />,
+  });
 });
 
 // 絵チャの部屋
@@ -107,10 +110,16 @@ app.get("/:userId", (c) => {
     );
   }
 
+  const userId = c.req.param("userId");
+
   return c.render(
     <>
       <Script src="/src/components/client/room-app.tsx" />
-      <div id="client-components" />
+      <div
+        id="client-components"
+        data-own-user-id={c.var.uid}
+        data-room-user-id={userId}
+      />
     </>,
     {
       head: <Link href="/src/components/client/style.css" rel="stylesheet" />,

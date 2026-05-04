@@ -8,12 +8,29 @@ import { UtilityBox } from "./utility-box";
 
 const DEFAULT_COLOR = "blue" as const;
 
-export default function RoomApp() {
+interface RoomAppProps {
+  ownUserId: string;
+  roomUserId: string;
+}
+
+export default function RoomApp({ ownUserId, roomUserId }: RoomAppProps) {
   const [canvas, setCanvas] = useState<RemoteCanvas | null>(null);
+  const ownRoomPath = `/${ownUserId}`;
+  const shouldShowOwnRoomLink = ownUserId !== "" && ownUserId !== roomUserId;
 
   return (
     <>
-      <header id="header">落書きシティ</header>
+      <header id="header">
+        <a id="header-title" href="/">
+          落書きシティ
+        </a>
+
+        {shouldShowOwnRoomLink && (
+          <a id="own-room-link" href={ownRoomPath}>
+            自分の部屋を開く
+          </a>
+        )}
+      </header>
       <img id="logo" src="/sofume_logo.png" alt="落書きシティのロゴ" />
 
       <RemoteCanvasUI
@@ -32,4 +49,10 @@ export default function RoomApp() {
 }
 
 const element = document.getElementById("client-components");
-render(<RoomApp />, element as HTMLElement);
+const ownUserId = element?.dataset.ownUserId ?? "";
+const roomUserId = element?.dataset.roomUserId ?? "";
+
+render(
+  <RoomApp ownUserId={ownUserId} roomUserId={roomUserId} />,
+  element as HTMLElement,
+);

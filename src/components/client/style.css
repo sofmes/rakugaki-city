@@ -73,8 +73,43 @@ body {
     position: absolute;
     top: 5px;
     left: 10px;
+
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+
+    z-index: 20;
+}
+
+#header-title {
     font-size: 30px;
     font-weight: bold;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+#header-title,
+#header-title:visited,
+#own-room-link,
+#own-room-link:visited {
+    color: black;
+    text-decoration: none;
+}
+
+#own-room-link {
+    border: 2px solid black;
+    border-radius: 4px;
+    padding: 5px 10px;
+    background-color: white;
+    font-size: 14px;
+    font-weight: normal;
+    line-height: 1.2;
+}
+
+#own-room-link:hover,
+#own-room-link:focus-visible {
+    background-color: black;
+    color: white;
 }
 
 /* 右下のソフメロゴ */
@@ -225,6 +260,20 @@ img.svg-icon {
 
 /* スマートフォンやタブレット向けのスタイル */
 @media (max-width: 900px) {
+    #header {
+        max-width: calc(100vw - 20px);
+        gap: 8px;
+    }
+
+    #header-title {
+        font-size: 24px;
+    }
+
+    #own-room-link {
+        padding: 4px 8px;
+        font-size: 13px;
+    }
+
     #mainbox {
         /* 小さい画面の場合は入りきらないので、下に道具選択を置く縦並びにする。 */
         flex-direction: column-reverse;
