@@ -57,7 +57,7 @@ body {
     flex-direction: row;
 
     /*
-        スマホでズーム時、標準のズームではなくライブラリのpanzoomにズームを任せる。
+        スマホでズーム時、標準のズームではなくライブラリのPanzoomにズームを任せる。
         このため、標準のズームはオフにする。
     */
     touch-action: none;

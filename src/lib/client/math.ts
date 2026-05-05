@@ -47,7 +47,7 @@ export function translateToCanvasPos(
   }
 
   // widthScale/heightScale: キャンバスの表示上の横幅・縦幅と解像度の縦幅と横幅の比率
-  // zoomScale: panzoomライブラリによる、ユーザーが行える拡大・縮小による拡大率。
+  // zoomScale: Panzoomライブラリによる、ユーザーが行える拡大・縮小による拡大率。
 
   const { widthScale, heightScale } = viewportScale;
 

@@ -51,7 +51,7 @@ $ pnpm run dev
 
 ## 謝辞
 
-このプロジェクトでは、キャンバスのズームなどに[panzoom](https://github.com/timmywil/panzoom)を使用しました。
+このプロジェクトでは、キャンバスのズームなどに[Panzoom](https://github.com/timmywil/panzoom)を使用しました。
 アイコンには[Lucide](https://lucide.dev/)を使用しました。
 
 また、以下の文献を参考にしました。ありがとうございます。
