@@ -59,3 +59,7 @@ $ pnpm run dev
 - https://github.com/cloudflare/workers-chat-demo/
 - https://blog.mooriii.com/entry/hono-durable-objects-tldraw
 - https://zenn.dev/mizchi/articles/cf-worker-for-pro-day2
+
+## ライセンス
+
+このリポジトリは[GNU General Public License v3.0 or later](./LICENSE)の下で公開されています。
