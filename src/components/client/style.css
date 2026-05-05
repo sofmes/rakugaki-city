@@ -114,8 +114,10 @@ body {
     font-size: 14px;
     font-weight: normal;
     line-height: 1.2;
+    -webkit-tap-highlight-color: transparent;
 }
 
+.header-action:active,
 .header-action:focus-visible {
     background-color: black;
     color: white;
@@ -126,6 +128,7 @@ body {
     height: 16px;
 }
 
+.header-action:active .header-action-icon,
 .header-action:focus-visible .header-action-icon {
     filter: invert(1);
 }
