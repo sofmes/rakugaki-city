@@ -1,4 +1,4 @@
-import { useState } from "hono/jsx";
+import { useRef, useState } from "hono/jsx";
 import { render } from "hono/jsx/dom";
 import type { RemoteCanvas } from "../../lib/client/session";
 import { SessionContext } from "./context";
@@ -15,8 +15,30 @@ interface RoomAppProps {
 
 export default function RoomApp({ ownRoomId, roomId }: RoomAppProps) {
   const [canvas, setCanvas] = useState<RemoteCanvas | null>(null);
+  const [isShareCopied, setIsShareCopied] = useState(false);
+  const shareCopiedTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
   const ownRoomPath = `/${ownRoomId}`;
   const shouldShowOwnRoomLink = ownRoomId !== "" && ownRoomId !== roomId;
+
+  const handleShareRoomClick = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setIsShareCopied(true);
+
+      if (shareCopiedTimeoutRef.current !== null) {
+        clearTimeout(shareCopiedTimeoutRef.current);
+      }
+
+      shareCopiedTimeoutRef.current = setTimeout(() => {
+        setIsShareCopied(false);
+        shareCopiedTimeoutRef.current = null;
+      }, 3000);
+    } catch {
+      alert("URLのコピーに失敗しました。");
+    }
+  };
 
   return (
     <>
@@ -27,11 +49,27 @@ export default function RoomApp({ ownRoomId, roomId }: RoomAppProps) {
 
         <span style="padding-left: 4px;">
           {shouldShowOwnRoomLink ? (
-            <a id="own-room-link" href={ownRoomPath}>
+            <a
+              id="own-room-link"
+              className="header-action"
+              href={ownRoomPath}
+            >
               自分の部屋を開く
             </a>
           ) : (
-            <>自分の部屋を開いています</>
+            <button
+              id="share-room-button"
+              className="header-action"
+              type="button"
+              onClick={handleShareRoomClick}
+            >
+              <img
+                src="/icons/link.svg"
+                alt=""
+                className="header-action-icon"
+              />
+              {isShareCopied ? "URLをコピーしました！" : "部屋を共有する"}
+            </button>
           )}
         </span>
       </header>

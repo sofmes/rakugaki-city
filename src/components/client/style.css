@@ -89,27 +89,56 @@ body {
 }
 
 #header-title,
-#header-title:visited,
-#own-room-link,
-#own-room-link:visited {
+#header-title:visited {
     color: black;
     text-decoration: none;
 }
 
-#own-room-link {
+.header-action,
+.header-action:visited {
+    color: black;
+    text-decoration: none;
+}
+
+.header-action {
+    appearance: none;
     border: 2px solid black;
     border-radius: 4px;
     padding: 5px 10px;
     background-color: white;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: inherit;
     font-size: 14px;
     font-weight: normal;
     line-height: 1.2;
 }
 
-#own-room-link:hover,
-#own-room-link:focus-visible {
+.header-action:focus-visible {
     background-color: black;
     color: white;
+}
+
+.header-action-icon {
+    width: 16px;
+    height: 16px;
+}
+
+.header-action:focus-visible .header-action-icon {
+    filter: invert(1);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .header-action:hover {
+        background-color: black;
+        color: white;
+    }
+
+    .header-action:hover .header-action-icon {
+        filter: invert(1);
+    }
 }
 
 /* 右下のソフメロゴ */
@@ -269,7 +298,7 @@ img.svg-icon {
         font-size: 24px;
     }
 
-    #own-room-link {
+    .header-action {
         padding: 4px 8px;
         font-size: 13px;
     }
