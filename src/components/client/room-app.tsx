@@ -9,14 +9,14 @@ import { UtilityBox } from "./utility-box";
 const DEFAULT_COLOR = "blue" as const;
 
 interface RoomAppProps {
-  ownUserId: string;
-  roomUserId: string;
+  ownRoomId: string;
+  roomId: string;
 }
 
-export default function RoomApp({ ownUserId, roomUserId }: RoomAppProps) {
+export default function RoomApp({ ownRoomId, roomId }: RoomAppProps) {
   const [canvas, setCanvas] = useState<RemoteCanvas | null>(null);
-  const ownRoomPath = `/${ownUserId}`;
-  const shouldShowOwnRoomLink = ownUserId !== "" && ownUserId !== roomUserId;
+  const ownRoomPath = `/${ownRoomId}`;
+  const shouldShowOwnRoomLink = ownRoomId !== "" && ownRoomId !== roomId;
 
   return (
     <>
@@ -35,6 +35,7 @@ export default function RoomApp({ ownUserId, roomUserId }: RoomAppProps) {
 
       <RemoteCanvasUI
         defaultColor={DEFAULT_COLOR}
+        ownRoomId={ownRoomId}
         setRemoteCanvas={setCanvas}
       />
 
@@ -49,10 +50,10 @@ export default function RoomApp({ ownUserId, roomUserId }: RoomAppProps) {
 }
 
 const element = document.getElementById("client-components");
-const ownUserId = element?.dataset.ownUserId ?? "";
-const roomUserId = element?.dataset.roomUserId ?? "";
+const ownRoomId = element?.dataset.ownRoomId ?? "";
+const roomId = element?.dataset.roomId ?? "";
 
 render(
-  <RoomApp ownUserId={ownUserId} roomUserId={roomUserId} />,
+  <RoomApp ownRoomId={ownRoomId} roomId={roomId} />,
   element as HTMLElement,
 );

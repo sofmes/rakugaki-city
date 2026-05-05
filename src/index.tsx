@@ -1,21 +1,27 @@
 import { type Env, Hono } from "hono";
-import { getCookie, setCookie } from "hono/cookie";
+import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import type { JSX } from "hono/jsx/jsx-runtime";
 import { Link, Script } from "vite-ssr-components/hono";
 import Home from "./components/server/home";
 import Manual from "./components/server/manual";
 import { CanvasRoom } from "./lib/server/canvas-room";
 import { RateLimit } from "./lib/server/rate-limit";
+import {
+  createRoomId,
+  getRoomIdSecret,
+  verifyRoomId,
+} from "./lib/server/room-id";
 import { renderer } from "./renderer";
 
 interface HonoBindings extends CloudflareBindings {
   PRODUCTION_MODE?: boolean;
+  ROOM_ID_SECRET?: string;
 }
 
 interface HonoEnv extends Env {
   Bindings: HonoBindings;
   Variables: {
-    uid: string;
+    roomId: string;
     ip: string;
     rateLimit?: {
       millisToNextRequest: number;
@@ -36,6 +42,29 @@ declare module "hono" {
 const app = new Hono<HonoEnv>();
 
 app.use(renderer);
+
+const ROOM_ID_COOKIE_NAME = "room_id";
+
+function getRoomCookieOptions() {
+  return {
+    path: "/",
+    sameSite: "Lax" as const,
+    secure: !import.meta.env.DEV,
+    httpOnly: true,
+  };
+}
+
+function getSecretOrError(env: HonoEnv["Bindings"]): string | Response {
+  const secret = getRoomIdSecret(env, import.meta.env.DEV);
+
+  if (secret === null) {
+    return new Response("部屋IDの署名鍵が設定されていません。", {
+      status: 500,
+    });
+  }
+
+  return secret;
+}
 
 // レート制限のチェックをするミドルウェア。
 // 悪戯で使われまくるのは色々と困る。
@@ -69,16 +98,20 @@ app.use("/*", async (c, next) => {
   await next();
 });
 
-// ユーザーIDを持っていない場合に、ユーザーIDを登録するミドルウェア。
+// 部屋IDを持っていない場合に、署名付きの部屋IDを発行するミドルウェア。
 app.use(async (c, next) => {
-  let uid = getCookie(c, "uid");
+  const secret = getSecretOrError(c.env);
+  if (secret instanceof Response) return secret;
 
-  if (uid === undefined) {
-    uid = crypto.randomUUID();
-    setCookie(c, "uid", uid);
+  let roomId = getCookie(c, ROOM_ID_COOKIE_NAME);
+
+  if (roomId === undefined || !(await verifyRoomId(roomId, secret))) {
+    roomId = await createRoomId(secret);
+    setCookie(c, ROOM_ID_COOKIE_NAME, roomId, getRoomCookieOptions());
   }
 
-  c.set("uid", uid);
+  deleteCookie(c, "uid", { path: "/" });
+  c.set("roomId", roomId);
 
   await next();
 });
@@ -90,7 +123,7 @@ app.get("/manual", (c) => {
 });
 
 app.get("/", (c) => {
-  const roomPath = `/${c.var.uid}`;
+  const roomPath = `/${c.var.roomId}`;
 
   return c.render(<Home ownRoomPath={roomPath} />, {
     head: <Link href="/src/components/server/style.css" rel="stylesheet" />,
@@ -98,7 +131,7 @@ app.get("/", (c) => {
 });
 
 // 絵チャの部屋
-app.get("/:userId", (c) => {
+app.get("/:roomId", async (c) => {
   if (c.get("rateLimit") !== undefined) {
     c.status(429);
 
@@ -110,15 +143,21 @@ app.get("/:userId", (c) => {
     );
   }
 
-  const userId = c.req.param("userId");
+  const roomId = c.req.param("roomId");
+  const secret = getSecretOrError(c.env);
+  if (secret instanceof Response) return secret;
+
+  if (!(await verifyRoomId(roomId, secret))) {
+    return c.redirect("/");
+  }
 
   return c.render(
     <>
       <Script src="/src/components/client/room-app.tsx" />
       <div
         id="client-components"
-        data-own-user-id={c.var.uid}
-        data-room-user-id={userId}
+        data-own-room-id={c.var.roomId}
+        data-room-id={roomId}
       />
     </>,
     {
@@ -130,7 +169,7 @@ app.get("/:userId", (c) => {
 });
 
 // キャンバスの絵の情報のやりとりをするためのWebSocketエンドポイント
-app.get("/:userId/ws", async (c) => {
+app.get("/:roomId/ws", async (c) => {
   if (c.get("rateLimit") !== undefined) {
     return new Response("レート制限を受けたので、接続できません。", {
       status: 429,
@@ -146,8 +185,15 @@ app.get("/:userId/ws", async (c) => {
     );
   }
 
-  const userId = c.req.param("userId");
-  const objId = c.env.CANVAS_ROOM.idFromName(userId);
+  const roomId = c.req.param("roomId");
+  const secret = getSecretOrError(c.env);
+  if (secret instanceof Response) return secret;
+
+  if (!(await verifyRoomId(roomId, secret))) {
+    return new Response("無効な部屋IDです。", { status: 403 });
+  }
+
+  const objId = c.env.CANVAS_ROOM.idFromName(roomId);
   const room = c.env.CANVAS_ROOM.get(objId);
 
   return await room.fetch(c.req.raw);

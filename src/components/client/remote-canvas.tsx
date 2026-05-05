@@ -4,7 +4,6 @@ import {
   type CanvasState,
   RemoteCanvas as RemoteCanvasConn,
 } from "../../lib/client/session";
-import { getCookieValue } from "../../lib/client/utils";
 import Canvas from "./canvas";
 
 const CanvasMemoized = memo(Canvas);
@@ -14,11 +13,11 @@ const CanvasMemoized = memo(Canvas);
  */
 export function RemoteCanvasUI(props: {
   defaultColor: string;
+  ownRoomId: string;
   setRemoteCanvas: (canvas: RemoteCanvasConn) => void;
 }) {
   const [state, setState] = useState<CanvasState>("closed");
   const [canvas, setCanvas] = useState<HTMLCanvasElement>();
-  const userId = getUserId();
 
   const createController = useMemo(
     () => (e: HTMLCanvasElement) => {
@@ -28,8 +27,12 @@ export function RemoteCanvasUI(props: {
         throw new Error("キャンバスのコンテクストの取得に失敗。");
       }
 
-      const com = new CanvasObjectModel(userId, ctx, props.defaultColor);
-      const session = new RemoteCanvasConn(com, userId, setState);
+      const com = new CanvasObjectModel(
+        props.ownRoomId,
+        ctx,
+        props.defaultColor,
+      );
+      const session = new RemoteCanvasConn(com, props.ownRoomId, setState);
       props.setRemoteCanvas(session);
 
       setCanvas(e);
@@ -62,19 +65,4 @@ function Connecting() {
       </div>
     </>
   );
-}
-
-function getUserId() {
-  // TODO: いつかcookieStore.getを使う。
-  const userId = getCookieValue("uid"); // ユーザーのID
-
-  if (userId === null) {
-    alert("何らかのエラーが発生しました。再読み込みしてください。");
-
-    throw new Error(
-      "ユーザーIDがありませんでした。このため、処理を続行できません。",
-    );
-  }
-
-  return userId;
 }
