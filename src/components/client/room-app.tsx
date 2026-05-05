@@ -25,11 +25,15 @@ export default function RoomApp({ ownRoomId, roomId }: RoomAppProps) {
           落書きシティ
         </a>
 
-        {shouldShowOwnRoomLink && (
-          <a id="own-room-link" href={ownRoomPath}>
-            自分の部屋を開く
-          </a>
-        )}
+        <span style="padding-left: 4px;">
+          {shouldShowOwnRoomLink ? (
+            <a id="own-room-link" href={ownRoomPath}>
+              自分の部屋を開く
+            </a>
+          ) : (
+            <>自分の部屋を開いています</>
+          )}
+        </span>
       </header>
       <img id="logo" src="/sofume_logo.png" alt="落書きシティのロゴ" />
 
