@@ -8,7 +8,11 @@ export default function Home({ ownRoomPath }: HomeProps) {
     <main class="home">
       <h1>落書きシティ</h1>
 
-      <p>図解のための、URLで共有できる、シンプルお絵描きチャット</p>
+      <p>
+        図解のための、URLで共有できる、シンプルお絵描きチャット
+        <br />
+        キャンバスは閉じて10分するとリセットされます
+      </p>
 
       <a class="home-room-link" href={ownRoomPath}>
         自分の部屋を開く
