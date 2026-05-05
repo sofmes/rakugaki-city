@@ -80,6 +80,7 @@ export class CanvasRoom extends DurableObject {
 
   async alarm(_alarmInfo?: AlarmInvocationInfo): Promise<void> {
     // 10分間誰も接続しなかったため、消滅する。
+    this.stack = [];
     await this.ctx.storage.deleteAll();
   }
 
