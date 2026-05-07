@@ -12,6 +12,10 @@ interface CanvasController {
   presentPath(): void;
 }
 
+interface CanvasInteractionState {
+  drawingPointerId: number | null;
+}
+
 export default function Canvas(props: {
   defaultColor: string;
   createController: (e: HTMLCanvasElement) => CanvasController | undefined;
@@ -30,6 +34,9 @@ export default function Canvas(props: {
       if (!ctx) throw new Error("キャンバスのContextの取得に失敗しました。");
 
       const controller = props.createController(canvas);
+      const interactionState: CanvasInteractionState = {
+        drawingPointerId: null,
+      };
 
       // キャンバス関連の処理の準備
       let panzoom: PanzoomObject | null = null;
@@ -47,13 +54,14 @@ export default function Canvas(props: {
       scale.bind();
 
       // Panzoomの準備。
-      [panzoom, cleanUpPanzoom] = setupPanzoom(canvas);
+      [panzoom, cleanUpPanzoom] = setupPanzoom(canvas, interactionState);
 
       // マウスなどの操作イベントを受け取って描画をする処理の準備。
       const cleanUpDraw = setupDrawEvent(
         canvas,
         scale,
         panzoom,
+        interactionState,
         () => controller,
       );
 
@@ -74,7 +82,10 @@ export default function Canvas(props: {
 /**
  * キャンバスの移動やズームの処理をセットアップする。
  */
-function setupPanzoom(canvas: HTMLCanvasElement) {
+function setupPanzoom(
+  canvas: HTMLCanvasElement,
+  interactionState: CanvasInteractionState,
+) {
   const MIDDLE_BUTTONS = 4;
 
   const centerPos = getCenter(canvas);
@@ -105,6 +116,8 @@ function setupPanzoom(canvas: HTMLCanvasElement) {
 
   addEventListener("touchstart", onMayBePinch);
   addEventListener("touchmove", onMayBePinch);
+  addEventListener("touchend", onMayBePinch);
+  addEventListener("touchcancel", onMayBePinch);
 
   // キャンバス内で指をなぞった時は、キャンバスを移動させるのではなく線を描きたい。
   // また、キャンバスの外でなくとも、二本指操作によるピンチは描画ではなくズームとしたい。
@@ -115,34 +128,65 @@ function setupPanzoom(canvas: HTMLCanvasElement) {
     isPinch;
 
   const onPointerDown = (e: PointerEvent) => {
+    if (
+      e.pointerType !== "mouse" &&
+      !isPinch &&
+      isInside(canvas, e.clientX, e.clientY)
+    ) {
+      // キャンバス内で始まったタッチは描画専用にする。
+      // 外へ出た後も指が離れるまではPanzoomへ渡さない。
+      interactionState.drawingPointerId = e.pointerId;
+      return;
+    }
+
     if (shouldHandle(e) || e.pointerType !== "mouse") {
       panzoom.handleDown(e);
     }
   };
 
   const onPointerMove = (e: PointerEvent) => {
+    if (interactionState.drawingPointerId === e.pointerId) return;
+
     if (shouldHandle(e)) {
       panzoom.handleMove(e);
     }
   };
 
   const onPointerUp = (e: PointerEvent) => {
+    if (interactionState.drawingPointerId === e.pointerId) {
+      interactionState.drawingPointerId = null;
+      return;
+    }
+
+    panzoom.handleUp(e);
+  };
+
+  const onPointerCancel = (e: PointerEvent) => {
+    if (interactionState.drawingPointerId === e.pointerId) {
+      interactionState.drawingPointerId = null;
+      return;
+    }
+
     panzoom.handleUp(e);
   };
 
   addEventListener("pointerdown", onPointerDown);
   addEventListener("pointermove", onPointerMove);
   addEventListener("pointerup", onPointerUp);
+  addEventListener("pointercancel", onPointerCancel);
 
   return [
     panzoom,
     () => {
       removeEventListener("touchstart", onMayBePinch);
       removeEventListener("touchmove", onMayBePinch);
+      removeEventListener("touchend", onMayBePinch);
+      removeEventListener("touchcancel", onMayBePinch);
 
       removeEventListener("pointerdown", onPointerDown);
       removeEventListener("pointermove", onPointerMove);
       removeEventListener("pointerup", onPointerUp);
+      removeEventListener("pointercancel", onPointerCancel);
 
       panzoom.destroy();
     },
@@ -156,6 +200,7 @@ function setupDrawEvent(
   canvas: HTMLCanvasElement,
   scale: ViewportScale,
   panzoom: PanzoomObject,
+  interactionState: CanvasInteractionState,
   controller: () => CanvasController | undefined,
 ) {
   // ボタンを押す時は、描画はせずそのボタンを押す動作のみにしたい。
@@ -175,6 +220,13 @@ function setupDrawEvent(
 
   // マウスでの線の描画操作のイベントハンドラたち。
   let painting = false;
+
+  const finishPath = () => {
+    if (!painting) return;
+
+    controller()?.presentPath();
+    painting = false;
+  };
 
   const onDown = (event: MouseEvent) => {
     if (mouseFilter(event, true)) return;
@@ -211,8 +263,7 @@ function setupDrawEvent(
       // こうしないと、場外に飛び出たあとにキャンバスにマウスが行くと、
       // 途切れた場所からそこまで線が伸びてしまい、意図せぬ描画となってしまう。
 
-      controller()?.presentPath();
-      painting = false;
+      finishPath();
     }
   };
 
@@ -248,7 +299,10 @@ function setupDrawEvent(
   };
 
   const onTouchStart = (event: TouchEvent) => {
-    if (touchFilter(event, true)) return;
+    if (touchFilter(event, true)) {
+      finishPath();
+      return;
+    }
 
     const touch = event.touches[0];
     const pos = translateToCanvasPos(
@@ -261,11 +315,17 @@ function setupDrawEvent(
 
     if (pos) {
       painting = true;
+      controller()?.paint(pos.x, pos.y);
     }
   };
 
   const onTouchMove = (event: TouchEvent) => {
-    if (touchFilter(event, false)) return;
+    if (touchFilter(event, false)) {
+      finishPath();
+      return;
+    }
+
+    if (!painting) return;
 
     const touch = event.touches[0];
     const pos = translateToCanvasPos(
@@ -278,14 +338,20 @@ function setupDrawEvent(
 
     if (pos) {
       controller()?.paint(pos.x, pos.y);
+    } else {
+      // 指がキャンバス外へ出たらそこで一筆を確定し、同じ指ではPanzoomもしない。
+      finishPath();
     }
   };
 
   const onTouchEnd = () => {
-    if (painting) {
-      controller()?.presentPath();
-      painting = false;
-    }
+    finishPath();
+    interactionState.drawingPointerId = null;
+  };
+
+  const onTouchCancel = () => {
+    finishPath();
+    interactionState.drawingPointerId = null;
   };
 
   addEventListener("mousedown", onDown);
@@ -295,6 +361,7 @@ function setupDrawEvent(
   addEventListener("touchstart", onTouchStart);
   addEventListener("touchmove", onTouchMove);
   addEventListener("touchend", onTouchEnd);
+  addEventListener("touchcancel", onTouchCancel);
 
   return () => {
     removeEventListener("mousedown", onDown);
@@ -304,5 +371,6 @@ function setupDrawEvent(
     removeEventListener("touchstart", onTouchStart);
     removeEventListener("touchmove", onTouchMove);
     removeEventListener("touchend", onTouchEnd);
+    removeEventListener("touchcancel", onTouchCancel);
   };
 }
